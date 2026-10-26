@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#15130f">
+    <title>Cancionero</title>
+
+    <!-- App instalable: al publicarlo en internet se puede agregar a la pantalla de inicio del teléfono -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Cancionero">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        :root {
+            --bg: #15130f;
+            --panel: #201d17;
+            --panel2: #2a261e;
+            --line: #3a3428;
+            --tx: #f4ecdc;
+            --mut: #a89f8c;
+            --acc: #8fd0f2;
+            --acc-tx: #0b2230;
+            --coral: #ff6b4a;
+            --chord: #b6e2f8;
+            --lyrics-size: 17px;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            margin: 0; background: var(--bg); color: var(--tx);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        body.noscroll { overflow: hidden; }
+        button { font-family: inherit; cursor: pointer; }
+
+        /* ---------- Encabezado con pestañas ---------- */
+        .head { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: calc(12px + env(safe-area-inset-top)) 14px 10px; border-bottom: 1px solid var(--line); }
+        .brand { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--acc); font-weight: 800; margin-bottom: 8px; }
+        .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--panel); border-radius: 14px; padding: 4px; gap: 4px; }
+        .seg button { border: none; background: transparent; color: var(--mut); font-size: 15px; font-weight: 700; min-height: 44px; border-radius: 11px; }
+        .seg button.on { background: var(--acc); color: var(--acc-tx); }
+        .seg b { background: rgba(0,0,0,0.25); border-radius: 10px; padding: 1px 8px; margin-left: 6px; font-size: 13px; }
+        .seg button:not(.on) b { background: var(--panel2); color: var(--tx); }
+
+        .view { display: none; padding: 14px; max-width: 820px; margin: 0 auto; }
+        .view.on { display: block; }
+
+        /* ---------- Biblioteca (mosaicos) ---------- */
+        .search { width: 100%; min-height: 50px; padding: 0 18px; font-size: 16px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); color: var(--tx); outline: none; }
+        .search:focus { border-color: var(--acc); }
+        .hint { font-size: 13px; color: var(--mut); margin: 10px 4px 12px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 110px; }
+        @media (min-width: 640px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        .tile {
+            position: relative; min-height: 138px; background: var(--panel); border: 2px solid var(--line);
+            border-radius: 18px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; overflow: hidden;
+        }
+        .tile.on { border-color: var(--acc); background: linear-gradient(160deg, #1b3646, var(--panel)); }
+        .tile .key { font-size: 26px; font-weight: 900; color: var(--acc); letter-spacing: 1px; line-height: 1; }
+        .tile .tt { font-size: 15px; font-weight: 700; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .tile .sub { font-size: 12px; color: var(--mut); margin-top: 3px; display: block; font-weight: 400; }
+        .tile .tick {
+            position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 50%;
+            border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
+        }
+        .tile.on .tick { background: var(--acc); border-color: var(--acc); color: var(--acc-tx); }
+        .tile .mini {
+            position: absolute; bottom: 8px; right: 8px; width: 36px; height: 36px; border-radius: 50%;
+            border: none; background: var(--panel2); color: var(--mut); font-size: 16px;
+        }
+        .tile .txt { padding-right: 34px; }
+        .empty { text-align: center; color: var(--mut); padding: 40px 10px; line-height: 1.6; }
+        .empty .btn-acc { margin-top: 14px; }
+
+        .fab {
+            position: fixed; right: 18px; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 30;
+            width: 64px; height: 64px; border-radius: 22px; border: none; background: var(--acc); color: var(--acc-tx);
+            font-size: 34px; font-weight: 300; box-shadow: 0 8px 22px rgba(143,208,242,0.32); display: none;
+        }
+        body.lib .fab { display: block; }
+
+        /* ---------- Mi set (modo escenario) ---------- */
+        .chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .chips::-webkit-scrollbar { display: none; }
+        .chip { flex: 0 0 auto; border: 1px solid var(--line); background: var(--panel); color: var(--mut); border-radius: 16px; padding: 0 11px; min-height: 31px; font-size: 12px; font-weight: 700; max-width: 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chip.on { background: var(--acc); border-color: var(--acc); color: var(--acc-tx); }
+
+        .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 12px 62px 14px 14px; margin-bottom: 120px; position: relative; }
+        .stage.noset { padding-right: 16px; }
+        .s-top { display: flex; align-items: flex-start; gap: 8px; }
+        .s-num { font-size: 26px; font-weight: 900; color: var(--line); line-height: 1; }
+        .s-title { flex: 1; min-width: 0; }
+        .s-title h2 { margin: 0; font-size: 17px; line-height: 1.2; }
+        .s-title small { color: var(--mut); font-size: 12px; display: block; margin-top: 2px; }
+        .badge { display: inline-block; margin-top: 5px; background: var(--acc); color: var(--acc-tx); font-weight: 900; border-radius: 6px; padding: 2px 8px; font-size: 12px; letter-spacing: 1px; }
+        .s-order { display: flex; gap: 6px; margin: 10px 0; }
+        .s-order button { flex: 1; min-height: 32px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); border-radius: 10px; font-size: 12px; font-weight: 700; }
+        .s-order button.rm { color: var(--coral); }
+        .s-order button:disabled { opacity: 0.35; }
+
+        pre.lyrics {
+            margin: 0; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: var(--lyrics-size); line-height: 1.65;
+            overflow-x: auto; white-space: pre; padding: 4px 0 8px; -webkit-overflow-scrolling: touch;
+        }
+        .stage.wrap pre.lyrics { white-space: pre-wrap; word-break: break-word; }
+        pre.lyrics .ch { color: var(--chord); font-weight: 800; }
+        pre.lyrics .sec { background: rgba(255,107,74,0.16); color: var(--coral); border-radius: 6px; padding: 1px 8px; font-weight: 700; font-size: 0.82em; text-transform: uppercase; letter-spacing: 1px; }
+        pre.lyrics strong { color: #fff; }
+        pre.lyrics:empty::before { content: "Sin letra todavía. Toca ✎ para pegar la letra con acordes."; color: var(--mut); font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; font-style: italic; white-space: normal; }
+
+        details.notes { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; }
+        details.notes summary { font-weight: 700; color: var(--mut); min-height: 36px; display: flex; align-items: center; cursor: pointer; list-style: none; }
+        details.notes summary::-webkit-details-marker { display: none; }
+        .note-tools { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+        .note-tools small { color: var(--mut); font-size: 12px; }
+        .note-ed { min-height: 60px; padding: 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); font-size: 16px; outline: none; white-space: pre-wrap; }
+        .note-ed:focus { border-color: var(--acc); }
+        .note-ed:empty::before { content: attr(data-ph); color: var(--mut); }
+
+        /* Riel flotante lateral */
+        .rail { position: fixed; right: 10px; top: 50%; transform: translateY(-50%); z-index: 25; display: none; flex-direction: column; gap: 10px; background: rgba(32,29,23,0.92); border: 1px solid var(--line); border-radius: 26px; padding: 8px; backdrop-filter: blur(6px); }
+        body.set.hasset .rail { display: flex; }
+        .rail button { width: 46px; height: 46px; border-radius: 50%; border: none; background: var(--panel2); color: var(--tx); font-size: 17px; font-weight: 800; }
+        .rail button.main { background: var(--acc); color: var(--acc-tx); }
+
+        /* Barra de paginación */
+        .pager { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: none; align-items: center; gap: 10px; padding: 10px 14px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(to top, var(--bg) 70%, transparent); }
+        body.set.hasset .pager { display: flex; }
+        .pager button { flex: 1; min-height: 56px; border-radius: 18px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); font-size: 17px; font-weight: 800; }
+        .pager button.next { background: var(--acc); border-color: var(--acc); color: var(--acc-tx); }
+        .pager button:disabled { opacity: 0.35; }
+        .pager .pos { flex: 0 0 auto; font-weight: 800; color: var(--mut); min-width: 58px; text-align: center; }
+
+        .btn-acc { background: var(--acc); color: var(--acc-tx); border: none; border-radius: 14px; min-height: 48px; padding: 0 20px; font-weight: 800; font-size: 15px; }
+        .btn-b { width: 44px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); font-weight: 900; font-size: 17px; }
+
+        /* ---------- Guardado en el archivo HTML ---------- */
+        .brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .brand-row .brand { margin: 0; }
+        .btn-html { position: relative; border: 1px solid var(--line); background: var(--panel); color: var(--acc); font-weight: 800; font-size: 13px; border-radius: 12px; min-height: 36px; padding: 0 12px; }
+        .btn-html .dot { display: none; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); border: 2px solid var(--bg); }
+        .estado { margin: -4px 4px 12px; font-weight: 700; }
+        .estado.ok { color: #7ee787; }
+        .estado.pend { color: var(--acc); }
+
+        .link-btn { display: inline-block; margin: 0 4px 12px; background: none; border: 1px dashed var(--line); color: var(--acc); border-radius: 10px; min-height: 36px; padding: 0 12px; font-weight: 700; font-size: 13px; }
+
+        /* ---------- Play: pantalla limpia ---------- */
+        .play-row { display: none; width: 100%; min-height: 42px; margin-bottom: 8px; border: none; border-radius: 14px; background: var(--acc); color: var(--acc-tx); font-size: 15px; font-weight: 800; }
+        body.hasset .play-row { display: block; }
+        .play-fab { position: fixed; right: 94px; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 30; height: 64px; padding: 0 20px; border-radius: 22px; border: 2px solid var(--acc); background: var(--panel2); color: var(--acc); font-size: 17px; font-weight: 800; display: none; }
+        body.lib.hasset .play-fab { display: block; }
+        .escena { position: fixed; inset: 0; z-index: 150; background: var(--bg); display: none; flex-direction: column; }
+        .escena.open { display: flex; }
+        .esc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: calc(8px + env(safe-area-inset-top)) 12px 8px 16px; border-bottom: 1px solid var(--line); }
+        .esc-info { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+        .esc-pos { color: var(--mut); font-weight: 800; font-size: 13px; flex: 0 0 auto; }
+        .esc-titulo { font-size: 18px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .esc-tono { background: var(--acc); color: var(--acc-tx); font-weight: 900; font-size: 12px; border-radius: 6px; padding: 2px 8px; letter-spacing: 1px; white-space: nowrap; flex: 0 0 auto; }
+        .esc-x { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--panel2); color: var(--mut); font-size: 18px; flex: 0 0 auto; }
+        .esc-body { flex: 1; overflow-y: auto; padding: 12px 16px 110px; -webkit-overflow-scrolling: touch; }
+        .escena.wrap pre.lyrics { white-space: pre-wrap; word-break: break-word; }
+        .esc-bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; padding: 10px 12px calc(12px + env(safe-area-inset-bottom)); background: rgba(21,19,15,0.97); border-top: 1px solid var(--line); transform: translateY(100%); transition: transform .2s; }
+        .esc-bar.show { transform: none; }
+        .esc-bar button { flex: 1; min-height: 52px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); font-size: 16px; font-weight: 800; }
+        .esc-bar button:disabled { opacity: 0.35; }
+
+        /* ---------- Resaltado de texto (6 colores) ---------- */
+        .hl1 { background: #ffe066; }
+        .hl2 { background: #7ee787; }
+        .hl3 { background: #79c0ff; }
+        .hl4 { background: #ff8fb1; }
+        .hl5 { background: #ffa657; }
+        .hl6 { background: #d2a8ff; }
+        /* Sin padding horizontal para no mover los acordes que están sobre la letra */
+        pre.lyrics mark.hl, pre.lyrics mark.hl strong { color: #1d1400; border-radius: 3px; }
+        .hl-pal { display: none; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+        .hl-pal.open { display: flex; }
+        .hl-pal .sw { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); padding: 0; }
+        .hl-pal .sp2 { flex: 1; min-width: 4px; }
+        .hl-pal .t { min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); padding: 0 12px; font-weight: 700; font-size: 13px; }
+
+        /* ---------- Editor a pantalla completa ---------- */
+        .editor { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: none; flex-direction: column; }
+        .editor.open { display: flex; }
+        .ed-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; border-bottom: 1px solid var(--line); }
+        .ed-bar h3 { margin: 0; font-size: 16px; }
+        .ed-bar button { min-height: 44px; border-radius: 12px; border: none; padding: 0 16px; font-weight: 800; font-size: 15px; }
+        .ed-bar .cancel { background: var(--panel2); color: var(--tx); }
+        .ed-bar .ok { background: var(--acc); color: var(--acc-tx); }
+        .ed-body { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 12px; overflow-y: auto; }
+        .ed-row { display: grid; grid-template-columns: 1fr 90px; gap: 8px; }
+        .ed-body label { font-size: 12px; font-weight: 700; color: var(--mut); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+        .ed-body input[type="text"] { width: 100%; min-height: 48px; padding: 0 14px; font-size: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--tx); outline: none; }
+        .ed-body input[type="text"]:focus, .ed-body textarea:focus { border-color: var(--acc); }
+        .ed-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .ed-tools .sp { flex: 1; }
+        .ed-tools .t { min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); padding: 0 12px; font-weight: 700; font-size: 14px; }
+        .ed-tools .t:disabled { opacity: 0.35; }
+        #edTexto {
+            flex: 1; min-height: 42vh; width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--tx);
+            font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 16px; line-height: 1.5; resize: none; white-space: pre; overflow: auto; outline: none;
+        }
+        .danger { background: transparent; border: 1px solid var(--coral); color: var(--coral); min-height: 48px; border-radius: 14px; font-weight: 800; font-size: 15px; margin-top: 4px; }
+
+        .toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translate(-50%, 16px); background: #fff; color: #111; padding: 12px 18px; border-radius: 24px; font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: all .25s; z-index: 200; max-width: 90vw; text-align: center; }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    </style>
+</head>
+<body class="lib">
+
+<header class="head">
+    <div class="brand-row">
+        <div class="brand">♪ Cancionero</div>
+        <button class="btn-html" id="btnHtml" onclick="guardarEnArchivo()" aria-label="Guardar los cambios en el archivo HTML"><span id="txtGuardar">⬇ HTML</span><span class="dot" id="dotHtml"></span></button>
+    </div>
+    <div class="seg">
+        <button id="tabLib" class="on" onclick="irA('lib')">Biblioteca</button>
+        <button id="tabSet" onclick="irA('set')">Mi set<b id="setCount">0</b></button>
+    </div>
+</header>
+
+<!-- BIBLIOTECA -->
+<section class="view on" id="viewLib">
+    <input class="search" type="search" id="search" placeholder="Buscar canción…" oninput="renderLib()" autocomplete="off">
+    <div class="hint">Toca una canción para sumarla a tu set. El número indica su orden.</div>
+    <div class="hint estado ok" id="estadoArchivo"></div>
+    <button class="link-btn" onclick="el('archivoImportar').click()">📥 Importar canciones de otro archivo HTML</button>
+    <input type="file" id="archivoImportar" accept=".html,.htm,text/html" style="display:none" onchange="importarDesdeArchivo(this)">
+    <div class="grid" id="grid"></div>
+</section>
+
+<!-- MI SET -->
+<section class="view" id="viewSet">
+    <button class="play-row" onclick="iniciarEscenario()">▶ Play · pantalla limpia</button>
+    <div class="chips" id="chips"></div>
+    <div id="stageBox"></div>
+</section>
+
+<button class="fab" onclick="abrirEditor(null)" aria-label="Nueva canción">＋</button>
+<button class="play-fab" onclick="iniciarEscenario()" aria-label="Reproducir el set en pantalla limpia">▶ Play <span id="playN"></span></button>
+
+<!-- Riel flotante y paginación (solo en Mi set) -->
+<div class="rail" id="rail">
+    <button class="main" onclick="abrirEditor(setIds[cur])" aria-label="Editar">✎</button>
+    <button onclick="cambiarTamano(1)" aria-label="Letra más grande">A+</button>
+    <button onclick="cambiarTamano(-1)" aria-label="Letra más pequeña">A−</button>
+    <button onclick="alternarAjuste()" aria-label="Ajustar líneas">↔</button>
+    <button onclick="cambiarTono(1)" aria-label="Subir medio tono">T+</button>
+    <button onclick="cambiarTono(-1)" aria-label="Bajar medio tono">T−</button>
+</div>
+<div class="pager" id="pager">
+    <button id="btnPrev" onclick="mover(-1)">‹ Anterior</button>
+    <div class="pos" id="pos">1/1</div>
+    <button class="next" id="btnNext" onclick="mover(1)">Siguiente ›</button>
+</div>
+
+<!-- EDITOR A PANTALLA COMPLETA -->
+<div class="editor" id="editor">
+    <div class="ed-bar">
+        <button class="cancel" onclick="cerrarEditor()">✕ Cancelar</button>
+        <h3 id="edHead">Editar canción</h3>
+        <button class="ok" onclick="guardarEditor()">✔ Listo</button>
+    </div>
+    <div class="ed-body">
+        <div class="ed-row">
+            <div>
+                <label for="edTitulo">Nombre de la canción</label>
+                <input type="text" id="edTitulo" oninput="editorCambio()" placeholder="Título - Artista">
+            </div>
+            <div>
+                <label for="edTono">Tono</label>
+                <input type="text" id="edTono" oninput="editorCambio()" placeholder="RE" style="text-align:center;text-transform:uppercase;font-weight:800">
+            </div>
+        </div>
+        <div class="ed-tools">
+            <button class="btn-b" onmousedown="event.preventDefault()" onclick="negritaLetra()" aria-label="Negrita">B</button>
+            <button class="btn-b" id="btnHl" onmousedown="event.preventDefault()" onclick="alternarPaleta()" aria-label="Resaltar con color">🖍</button>
+            <span class="sp"></span>
+            <button class="t" id="btnRev" onclick="revertirEditor()">↩ Revertir</button>
+            <button class="t" id="btnRedo" onclick="rehacerEditor()" disabled>↪ Rehacer</button>
+        </div>
+        <div class="hl-pal" id="hlPal">
+            <button class="sw hl1" onmousedown="event.preventDefault()" onclick="resaltar(1)" aria-label="Resaltar en amarillo"></button>
+            <button class="sw hl2" onmousedown="event.preventDefault()" onclick="resaltar(2)" aria-label="Resaltar en verde"></button>
+            <button class="sw hl3" onmousedown="event.preventDefault()" onclick="resaltar(3)" aria-label="Resaltar en azul"></button>
+            <button class="sw hl4" onmousedown="event.preventDefault()" onclick="resaltar(4)" aria-label="Resaltar en rosa"></button>
+            <button class="sw hl5" onmousedown="event.preventDefault()" onclick="resaltar(5)" aria-label="Resaltar en naranja"></button>
+            <button class="sw hl6" onmousedown="event.preventDefault()" onclick="resaltar(6)" aria-label="Resaltar en morado"></button>
+            <span class="sp2"></span>
+            <button class="t" onmousedown="event.preventDefault()" onclick="quitarResaltado()">✕ Quitar</button>
+            <button class="t" onmousedown="event.preventDefault()" onclick="quitarTodoResaltado()">Quitar todo</button>
+        </div>
+        <textarea id="edTexto" oninput="editorCambio()" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Pega aquí la letra con acordes. Selecciona texto (una o varias líneas) y usa B para negrita o 🖍 para resaltar con color."></textarea>
+        <button class="danger" id="btnEliminar" onclick="eliminarDesdeEditor()">🗑 Eliminar esta canción</button>
+    </div>
+</div>
+
+<!-- PANTALLA LIMPIA (Play): solo título y letra. Toca la letra para mostrar u ocultar los controles. -->
+<div class="escena" id="escena">
+    <div class="esc-top">
+        <div class="esc-info">
+            <span class="esc-pos" id="escPos"></span>
+            <span class="esc-titulo" id="escTitulo"></span>
+            <span class="esc-tono" id="escTono"></span>
+        </div>
+        <button class="esc-x" onclick="salirEscenario()" aria-label="Salir de la pantalla limpia">✕</button>
+    </div>
+    <div class="esc-body" id="escBody" onclick="alternarControlesEscenario()">
+        <pre class="lyrics" id="escLetra"></pre>
+    </div>
+    <div class="esc-bar" id="escBar">
+        <button id="escPrev" onclick="moverEscenario(-1)" aria-label="Canción anterior">‹</button>
+        <button onclick="cambiarTamano(-1)" aria-label="Letra más pequeña">A−</button>
+        <button onclick="cambiarTamano(1)" aria-label="Letra más grande">A+</button>
+        <button onclick="alternarAjuste()" aria-label="Ajustar líneas">↔</button>
+        <button onclick="cambiarTono(-1)" aria-label="Bajar medio tono">T−</button>
+        <button onclick="cambiarTono(1)" aria-label="Subir medio tono">T+</button>
+        <button id="escNext" onclick="moverEscenario(1)" aria-label="Canción siguiente">›</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- DATOS: las canciones viven aquí, dentro del archivo. El botón "⬇ HTML" de la app reescribe este bloque con tus canciones actuales. -->
+<script id="datos-canciones" type="application/json">
+{
+ "version": 1,
+ "canciones": [
+  {
+   "id": 1,
+   "titulo": "Toda lengua y toda nación - TTL",
+   "tono": "RE",
+   "comentario": "",
+   "notas": "[Ejemplo inventado]\n[Intro]\nRe   La   Sol   La\n\n[Verso]\nRe                 Sol\nHoy me levanto con un cantar\nSim                La\nQue llega despacio junto al mar\nRe                 Sol\nLas nubes pasan y sigo aquí\nSim          La        Re\nProbando esta letra, sí, sí, sí\n\n[Coro]\nSol           Re\nLetra de prueba, letra de prueba\nSim           La\nPara ver cómo se ve\nSol           Re\nAcordes arriba, palabras abajo\nLa            Re\nTodo en su lugar, ¿ves?"
+  },
+  {
+   "id": 2,
+   "titulo": "Rey de reyes - Marco Barrientos",
+   "tono": "RE",
+   "comentario": "",
+   "notas": "[Ejemplo inventado]\n[Verso]\nRe                  La\nCamino por un sendero de papel\nSol                 La\nDibujado con tinta de café\nRe                  La\nCada renglón es un escalón\nSol          La         Re\nQue me lleva a probar mi pantalla\n\n[Pre-coro]\nSim            Sol\nSi el texto cabe, ¡qué bien!\nLa\nSi no, lo muevo con el dedo\n\n[Coro]\nRe            La\nCanto una línea inventada\nSim           Sol\nCon acordes de colores\nRe            La\nVuelvo a empezar otra vez\nSol      La      Re\nY la letra sigue aquí"
+  },
+  {
+   "id": 3,
+   "titulo": "El Señor es mi rey - MSM",
+   "tono": "SIM",
+   "comentario": "",
+   "notas": "[Ejemplo inventado]\n[Intro]\nSim   Sol   Re   La\n\n[Verso 1]\nSim                  Sol\nUna luciérnaga escribe en el aire\nRe                   La\nFrases pequeñas que nadie leyó\nSim                  Sol\nYo las copio en este renglón\nRe         La          Sim\nPara ver si todo se acomodó\n\n[Coro]\nSol           Re\nBrilla, brilla, línea de prueba\nLa            Sim\nQue se vea clara en el móvil\nSol           Re\nTamaño justo, tono correcto\nLa       Sim\nY a seguir cantando"
+  },
+  {
+   "id": 4,
+   "titulo": "Me asombras - En espíritu y en verdad",
+   "tono": "DO",
+   "comentario": "",
+   "notas": "[Ejemplo inventado]\n[Verso]\nDo                 Sol\nPinto una nota sobre la mesa\nLam                Fa\nY la dejo secar al sol\nDo                 Sol\nSi el viento pasa la mueve un poco\nFa          Sol          Do\nY vuelve a su lugar mejor\n\n[Coro]\nFa            Do\nEsta es una letra de juguete\nSol           Lam\nHecha para probar el color\nFa            Do\nAcorde en amarillo, texto en blanco\nSol           Do\nAsí se ve el cancionero hoy"
+  },
+  {
+   "id": 5,
+   "titulo": "Cuán grande es Dios - En Espíritu y en Verdad",
+   "tono": "DO",
+   "comentario": "",
+   "notas": "[Ejemplo inventado]\n[Intro]\nDo   Fa   Sol   Do\n\n[Verso 1]\nDo                   Fa\nCuento los pasos de una hormiga\nLam                  Sol\nQue carga una migaja de pan\nDo                   Fa\nVa sin prisa, va sin duda\nSol           Fa         Do\nComo la línea que sigue al compás\n\n[Coro]\nFa           Do\nOh, canción de ensayo, canción de ensayo\nLam          Sol\nPruébame en grande y en chico\nFa           Do\nSi te deslizo hacia un lado\nSol          Do\nVerás todo bien alineado"
+  },
+  {
+   "id": 6,
+   "titulo": "Cielo y tierra - ICF",
+   "tono": "SIM",
+   "comentario": "",
+   "notas": "[Ejemplo inventado]\n[Verso]\nSim                  Sol\nHay un reloj sin manecillas\nRe                   La\nQue marca la hora de probar\nSim                  Sol\nUna estrofa, dos estrofas\nRe         La           Sim\nY el diseño por fin se ve\n\n[Coro]\nSol           Re\nLetra falsa, letra amiga\nLa            Sim\nNo pertenece a nadie más\nSol           Re\nSolo está para el ensayo\nLa       Sim\nDe esta pantalla de hoy\n\n[Puente]\nSol   Re   La   Sim"
+  }
+ ]
+}
+</script>
+
+<script>
+    // Copia del documento tal como llegó, antes de que la app lo modifique.
+    // El botón "⬇ HTML" la usa para generar el archivo actualizado.
+    const FUENTE_INICIAL = document.documentElement.outerHTML;
+
+    // El archivo HTML es la fuente principal de las canciones. El navegador solo guarda una copia de trabajo
+    // para no perder lo que agregues o cambies mientras no descargues el HTML actualizado.
+    const CLAVE_LOCAL = 'cancionero_local_v5';
+    const CLAVE_ANTERIOR = 'mis_canciones_cancionero_v4';   // versión anterior, donde todo vivía solo en el navegador
+    const CLAVE_SET = 'cancionero_set_v4';
+    const CLAVE_PREFS = 'cancionero_prefs_v2';
+
+    const el = id => document.getElementById(id);
+
+    const DATOS = (function () {
+        try { return JSON.parse(el('datos-canciones').textContent); } catch (e) { return { version: 0, canciones: [] }; }
+    })();
+    const sinVista = lista => lista.map(s => { const c = Object.assign({}, s); delete c.trans; return c; });
+    const copia = x => JSON.parse(JSON.stringify(x));
+
+    let canciones = copia(DATOS.canciones);
+    let baseActual = DATOS.version;   // versión del archivo sobre la que se está trabajando
+    let dirty = false;                // true = hay cambios que todavía no están en el archivo HTML
+
+    (function cargarCanciones() {
+        let local = null;
+        try { local = JSON.parse(localStorage.getItem(CLAVE_LOCAL)); } catch (e) {}
+        if (!local) {
+            // Migración desde la versión anterior, cuando todo vivía solo en el navegador
+            try {
+                const viejo = JSON.parse(localStorage.getItem(CLAVE_ANTERIOR));
+                if (Array.isArray(viejo) && viejo.length) {
+                    local = { base: DATOS.version, canciones: viejo, dirty: JSON.stringify(sinVista(viejo)) !== JSON.stringify(DATOS.canciones) };
+                }
+            } catch (e) {}
+        }
+        if (local && Array.isArray(local.canciones)) {
+            if (local.base >= DATOS.version) {
+                // La copia del navegador es igual o más nueva que el archivo
+                canciones = local.canciones; baseActual = local.base; dirty = !!local.dirty;
+            } else if (local.dirty) {
+                // El archivo es más nuevo, pero en este navegador hay cambios sin descargar
+                const usarArchivo = confirm('Este archivo trae una versión más nueva de tus canciones, pero en este navegador hay cambios que no has descargado.\n\nAceptar: usar la versión del archivo (esos cambios se perderán).\nCancelar: seguir con los cambios de este navegador.');
+                if (!usarArchivo) { canciones = local.canciones; baseActual = local.base; dirty = true; }
+            }
+            // Si el archivo es más nuevo y no hay cambios pendientes, se usa el archivo.
+        }
+        persistirLocal();
+    })();
+
+    let setIds = [];
+    try { setIds = (JSON.parse(localStorage.getItem(CLAVE_SET)) || []).filter(id => canciones.some(s => s.id === id)); } catch (e) {}
+
+    let prefs = { tam: 17, ajuste: false };
+    try { prefs = Object.assign(prefs, JSON.parse(localStorage.getItem(CLAVE_PREFS)) || {}); } catch (e) {}
+
+    let cur = 0;
+    let vista = 'lib';
+    let editor = { id: null, base: null, redo: [] };
+
+    // ---------- Utilidades ----------
+    function escapeHtml(t) {
+        return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function persistirLocal() {
+        try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ base: baseActual, dirty: dirty, canciones: canciones })); } catch (e) {}
+    }
+    // soloVista = true cuando el cambio no forma parte del archivo (por ejemplo el tono T+ / T−)
+    function guardar(soloVista) {
+        if (!soloVista) dirty = true;
+        persistirLocal();
+        actualizarEstadoArchivo();
+    }
+
+    // En Chrome/Edge de computadora se puede guardar sobre el mismo archivo. En teléfono se descarga una copia.
+    const PUEDE_SOBRESCRIBIR = typeof window.showSaveFilePicker === 'function';
+    const EN_LINEA = /^https?:$/.test(location.protocol);   // true cuando está publicado en internet
+    // Nombre con el que se guarda o descarga: el del propio archivo, o index.html cuando está publicado
+    const NOMBRE_ARCHIVO = (function () {
+        try { const n = decodeURIComponent(location.pathname.split('/').pop() || ''); return /\.html?$/i.test(n) ? n : 'index.html'; }
+        catch (e) { return 'index.html'; }
+    })();
+    const ETIQUETA_GUARDAR = PUEDE_SOBRESCRIBIR ? '💾 Guardar' : '⬇ HTML';
+    let archivoNombre = '';
+
+    function actualizarEstadoArchivo() {
+        const e = el('estadoArchivo');
+        if (e) {
+            e.className = 'hint estado ' + (dirty ? 'pend' : 'ok');
+            e.textContent = dirty
+                ? (EN_LINEA
+                    ? '● Hay cambios que solo están en este dispositivo. Para publicarlos toca ' + ETIQUETA_GUARDAR + ' (arriba) y sube el archivo ' + NOMBRE_ARCHIVO + ' a tu sitio.'
+                    : '● Hay cambios que solo están en este navegador. Toca ' + ETIQUETA_GUARDAR + ' (arriba) para guardarlos en el archivo.')
+                : '✔ Todo está guardado en el archivo HTML' + (archivoNombre ? ' (' + archivoNombre + ')' : '') + '.';
+        }
+        const d = el('dotHtml');
+        if (d) d.style.display = dirty ? 'inline-block' : 'none';
+        const b = el('txtGuardar');
+        if (b) b.textContent = ETIQUETA_GUARDAR;
+    }
+
+    function marcarGuardado(version) {
+        baseActual = version;
+        dirty = false;
+        persistirLocal();
+        actualizarEstadoArchivo();
+    }
+
+    // Memoria del archivo elegido (IndexedDB), para no volver a pedirlo en cada sesión
+    function idbAbrir() {
+        return new Promise((ok, mal) => {
+            const r = indexedDB.open('cancionero_archivo', 1);
+            r.onupgradeneeded = () => r.result.createObjectStore('h');
+            r.onsuccess = () => ok(r.result);
+            r.onerror = () => mal(r.error);
+        });
+    }
+    async function idbLeer(k) {
+        const db = await idbAbrir();
+        return new Promise((ok, mal) => { const q = db.transaction('h').objectStore('h').get(k); q.onsuccess = () => ok(q.result); q.onerror = () => mal(q.error); });
+    }
+    async function idbEscribir(k, v) {
+        const db = await idbAbrir();
+        return new Promise((ok, mal) => { const t = db.transaction('h', 'readwrite'); t.objectStore('h').put(v, k); t.oncomplete = () => ok(); t.onerror = () => mal(t.error); });
+    }
+
+    // Guarda sobre el MISMO archivo (sin copias). Si el navegador no lo permite, descarga el HTML.
+    async function guardarEnArchivo() {
+        const r = construirHtml();
+        if (!r) { aviso('No se pudo generar el archivo'); return; }
+        if (!PUEDE_SOBRESCRIBIR) { descargarHtml(); return; }
+        let handle = null;
+        try { handle = await idbLeer('archivo'); } catch (e) {}
+        try {
+            if (handle) {
+                let perm = await handle.queryPermission({ mode: 'readwrite' });
+                if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'readwrite' });
+                if (perm !== 'granted') handle = null;
+            }
+            if (!handle) {
+                aviso('Elige tu archivo "' + NOMBRE_ARCHIVO + '" para guardar sobre él', 5000);
+                handle = await window.showSaveFilePicker({
+                    suggestedName: NOMBRE_ARCHIVO,
+                    types: [{ description: 'Página HTML', accept: { 'text/html': ['.html', '.htm'] } }]
+                });
+                try { await idbEscribir('archivo', handle); } catch (e) {}
+            }
+            const w = await handle.createWritable();
+            await w.write(new Blob([r.html], { type: 'text/html;charset=utf-8' }));
+            await w.close();
+            archivoNombre = handle.name || '';
+            marcarGuardado(r.version);
+            aviso('✔ Guardado en ' + (archivoNombre || 'el archivo'));
+        } catch (e) {
+            if (e && e.name === 'AbortError') return;   // el usuario canceló
+            aviso('No se pudo escribir en el archivo. Se descargó una copia.', 5000);
+            descargarHtml(true);
+        }
+    }
+
+    // Genera el HTML completo con las canciones actuales dentro del bloque de datos
+    function construirHtml() {
+        const datos = { version: Date.now(), canciones: sinVista(canciones) };
+        const json = JSON.stringify(datos, null, 1)
+            .replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+        const re = /(<script id="datos-canciones"[^>]*>)[\s\S]*?(<\/script>)/;
+        if (!re.test(FUENTE_INICIAL)) return null;
+        return {
+            version: datos.version,
+            html: '<!DOCTYPE html>\n' + FUENTE_INICIAL.replace(re, (m, a, b) => a + '\n' + json + '\n' + b)
+        };
+    }
+
+    function descargarHtml(silencio) {
+        const r = construirHtml();
+        if (!r) { aviso('No se pudo generar el archivo'); return; }
+        const blob = new Blob([r.html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = NOMBRE_ARCHIVO;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        marcarGuardado(r.version);
+        if (!silencio) aviso('Listo: reemplaza tu archivo por el que se descargó (' + NOMBRE_ARCHIVO + ').', 6500);
+    }
+    function guardarSet() { try { localStorage.setItem(CLAVE_SET, JSON.stringify(setIds)); } catch (e) {} }
+    function songPorId(id) { return canciones.find(s => s.id === id); }
+
+    let toastTimer;
+    function aviso(msg, ms) {
+        const t = el('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2300);
+    }
+
+    function partesTitulo(t) {
+        const i = t.indexOf(' - ');
+        return i < 0 ? { main: t, sub: '' } : { main: t.slice(0, i), sub: t.slice(i + 3) };
+    }
+
+    // ---------- Acordes: reconocimiento y transposición ----------
+    // Escala cromática (con sostenidos) en notación latina e inglesa
+    const ESC_LAT = ['Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'];
+    const ESC_ING = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const IDX_LAT = { do: 0, re: 2, mi: 4, fa: 5, sol: 7, la: 9, si: 11 };
+    const IDX_ING = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+    // Un acorde = RAIZ + ALTERACIÓN (# o b) + CALIDAD (m, maj, dim, sus, add, 5, 7, 9, b5, (add9)...)
+    const RAIZ = '(DO|RE|MI|FA|SOL|LA|SI|Do|Re|Mi|Fa|Sol|La|Si|[A-G])';
+    const ALTERA = '([#b\u266F\u266D]?)';
+    const CALIDAD = '((?:maj|min|dim|aug|sus|add|m|M|[\u00B0\u00BA+]|[#b\u266F\u266D]?\\d+|\\([^)]*\\))*)';
+    const PARTE_ACORDE = new RegExp('^' + RAIZ + ALTERA + CALIDAD + '$');
+    // Símbolos que pueden ir entre acordes:  /  ,  -  |
+    const SEPARADORES = /[\/,\-\u2013\u2014|]+/;
+    const SOLO_SEPARADORES = /^[\/,\-\u2013\u2014|]+$/;
+
+    // Marcas de repetición que suelen ir en las líneas de acordes: x2, (x2), 2x
+    const REPETICION = /^[(\[]?(?:[xX]\d+|\d+[xX])[)\]]?$/;
+
+    // Una línea es de acordes si TODAS sus palabras son acordes, símbolos separadores o marcas de repetición (y hay al menos un acorde)
+    function esLineaAcordes(raw) {
+        let hay = false;
+        for (const t of raw.trim().split(/\s+/)) {
+            if (SOLO_SEPARADORES.test(t) || REPETICION.test(t)) continue;
+            const partes = t.split(SEPARADORES).filter(Boolean);
+            // el primero debe ser un acorde; los siguientes, otro acorde o un número (Re7/9)
+            if (!partes.length || !PARTE_ACORDE.test(partes[0])) return false;
+            if (!partes.every((p, i) => PARTE_ACORDE.test(p) || (i > 0 && /^\d+$/.test(p)))) return false;
+            hay = true;
+        }
+        return hay;
+    }
+
+    // Sube o baja n semitonos la raíz de un acorde y conserva todo lo demás (m, 7, sus, add9...)
+    function transponerParte(p, n) {
+        const m = PARTE_ACORDE.exec(p);
+        if (!m) return p;
+        const raiz = m[1], alt = m[2], resto = m[3];
+        const latino = raiz.length > 1;
+        const mayusc = latino && raiz === raiz.toUpperCase();
+        const base = latino ? IDX_LAT[raiz.toLowerCase()] : IDX_ING[raiz];
+        const desp = (alt === '#' || alt === '\u266F') ? 1 : (alt === 'b' || alt === '\u266D') ? -1 : 0;
+        const v = (((base + desp + n) % 12) + 12) % 12;
+        let nombre = latino ? ESC_LAT[v] : ESC_ING[v];
+        if (mayusc) nombre = nombre.toUpperCase();
+        return nombre + resto;
+    }
+
+    // Transpone cada acorde de una palabra (por ejemplo DO/A o DO-RE) respetando los símbolos
+    function transponerToken(tok, n) {
+        return tok.replace(/[^\/,\-\u2013\u2014|]+/g, p => transponerParte(p, n));
+    }
+
+    // ---------- Texto con estilos: negrita **texto** y resaltado {{1:texto}} (colores 1 a 6) ----------
+    // Convierte una línea con marcas en caracteres visibles con su estilo, y recuerda dónde empezó cada uno
+    const RE_HL = /\{\{([1-6]):/y;
+    function parsearLinea(l) {
+        const chars = [], pos = [];
+        const total = (l.match(/\*\*/g) || []).length;
+        const suelto = total % 2 ? l.lastIndexOf('**') : -1; // un ** sin pareja se muestra tal cual
+        let b = false, h = 0, i = 0;
+        while (i < l.length) {
+            if (i !== suelto && l.startsWith('**', i)) { b = !b; i += 2; continue; }
+            RE_HL.lastIndex = i;
+            const m = RE_HL.exec(l);
+            if (m) { h = +m[1]; i += m[0].length; continue; }
+            if (h && l.startsWith('}}', i)) { h = 0; i += 2; continue; }
+            chars.push({ c: l[i], b: b, h: h });
+            pos.push(i);
+            i++;
+        }
+        return { chars, pos };
+    }
+
+    // Vuelve a escribir las marcas a partir de los caracteres con estilo
+    function serializarLinea(chars) {
+        let s = '', b = false, h = 0;
+        const pos = [];
+        for (const x of chars) {
+            if (h && x.h !== h) { s += '}}'; h = 0; }
+            if (x.b !== b) { s += '**'; b = x.b; }
+            if (x.h && x.h !== h) { s += '{{' + x.h + ':'; h = x.h; }
+            pos.push(s.length);
+            s += x.c;
+        }
+        if (h) s += '}}';
+        if (b) s += '**';
+        return { texto: s, pos };
+    }
+
+    function charsAHtml(chars) {
+        let out = '', i = 0;
+        while (i < chars.length) {
+            let j = i;
+            while (j < chars.length && chars[j].b === chars[i].b && chars[j].h === chars[i].h) j++;
+            let seg = escapeHtml(chars.slice(i, j).map(x => x.c).join(''));
+            if (chars[i].b) seg = '<strong>' + seg + '</strong>';
+            if (chars[i].h) seg = '<mark class="hl hl' + chars[i].h + '">' + seg + '</mark>';
+            out += seg;
+            i = j;
+        }
+        return out;
+    }
+
+    // Transpone una línea de acordes (con estilos) intentando mantener cada acorde en su columna
+    function transponerChars(chars, n) {
+        const plano = chars.map(x => x.c).join('');
+        const re = /\S+/g;
+        const out = [];
+        const estiloEn = i => { const x = chars[Math.min(i, chars.length - 1)]; return { b: x.b, h: x.h }; };
+        let m;
+        while ((m = re.exec(plano))) {
+            while (out.length < m.index) { const e = estiloEn(out.length); out.push({ c: ' ', b: e.b, h: e.h }); }
+            if (out.length > 0 && out[out.length - 1].c !== ' ') { const e = estiloEn(m.index - 1); out.push({ c: ' ', b: e.b, h: e.h }); }
+            const e = chars[m.index];
+            for (const ch of transponerToken(m[0], n)) out.push({ c: ch, b: e.b, h: e.h });
+        }
+        return out;
+    }
+
+    // Tono de la canción ya transpuesto (SIM = Si menor)
+    function tonoTranspuesto(tono, n) {
+        if (!tono || !n) return tono;
+        return transponerParte(tono.replace(/M$/, 'm'), n);
+    }
+
+    function renderLetra(txt, n) {
+        if (!txt) return '';
+        return txt.split('\n').map(l => {
+            const { chars } = parsearLinea(l);
+            const plano = chars.map(x => x.c).join('');
+            const raw = plano.trim();
+            if (!raw) return charsAHtml(chars);
+
+            // Sección sola en su línea: [Coro]
+            if (/^\[.*\]$/.test(raw)) {
+                const ini = plano.length - plano.trimStart().length;
+                return '<span class="sec">' + charsAHtml(chars.slice(ini, ini + raw.length)) + '</span>';
+            }
+            // Sección seguida de acordes en la misma línea: [Intro] Re  La  Sol
+            const mx = /^(\s*\[[^\]]*\])(\s+\S.*)$/.exec(plano);
+            if (mx && esLineaAcordes(mx[2])) {
+                const ini = mx[1].length - mx[1].trimStart().length;
+                let resto = chars.slice(mx[1].length);
+                if (n) resto = transponerChars(resto, n);
+                return '<span class="sec">' + charsAHtml(chars.slice(ini, mx[1].length)) + '</span><span class="ch">' + charsAHtml(resto) + '</span>';
+            }
+            // Línea de acordes
+            if (esLineaAcordes(raw)) {
+                return '<span class="ch">' + charsAHtml(n ? transponerChars(chars, n) : chars) + '</span>';
+            }
+            return charsAHtml(chars);
+        }).join('\n');
+    }
+
+    // ---------- Navegación ----------
+    function irA(v) {
+        vista = v;
+        document.body.classList.toggle('lib', v === 'lib');
+        document.body.classList.toggle('set', v === 'set');
+        el('viewLib').classList.toggle('on', v === 'lib');
+        el('viewSet').classList.toggle('on', v === 'set');
+        el('tabLib').classList.toggle('on', v === 'lib');
+        el('tabSet').classList.toggle('on', v === 'set');
+        if (v === 'set') renderSet(); else renderLib();
+        window.scrollTo(0, 0);
+    }
+
+    function actualizarEstado() {
+        el('setCount').textContent = setIds.length;
+        el('playN').textContent = '· ' + setIds.length;
+        document.body.classList.toggle('hasset', setIds.length > 0);
+    }
+
+    // ---------- Biblioteca ----------
+    function renderLib() {
+        const q = el('search').value.toLowerCase().trim();
+        const lista = canciones.filter(s => s.titulo.toLowerCase().includes(q));
+        const grid = el('grid');
+        if (lista.length === 0) {
+            grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No hay canciones que mostrar.<br>Usa ＋ para agregar una.</div>';
+        } else {
+            grid.innerHTML = lista.map(s => {
+                const pos = setIds.indexOf(s.id);
+                const p = partesTitulo(s.titulo);
+                return `
+                <div class="tile ${pos >= 0 ? 'on' : ''}" onclick="alternarEnSet(${s.id})">
+                    <span class="tick">${pos >= 0 ? pos + 1 : ''}</span>
+                    <span class="key">${escapeHtml(s.tono || '—')}</span>
+                    <span class="tt txt">${escapeHtml(p.main)}${p.sub ? `<span class="sub">${escapeHtml(p.sub)}</span>` : ''}</span>
+                    <button class="mini" onclick="event.stopPropagation();abrirEditor(${s.id})" aria-label="Editar">✎</button>
+                </div>`;
+            }).join('');
+        }
+        actualizarEstado();
+    }
+
+    function alternarEnSet(id) {
+        const i = setIds.indexOf(id);
+        if (i >= 0) setIds.splice(i, 1); else setIds.push(id);
+        guardarSet();
+        renderLib();
+    }
+
+    // ---------- Mi set ----------
+    function renderSet() {
+        actualizarEstado();
+        const box = el('stageBox');
+        if (setIds.length === 0) {
+            el('chips').innerHTML = '';
+            box.innerHTML = `<div class="empty">Tu set está vacío.<br>Elige canciones en la Biblioteca.<br><button class="btn-acc" onclick="irA('lib')">Ir a la Biblioteca</button></div>`;
+            return;
+        }
+        if (cur >= setIds.length) cur = setIds.length - 1;
+        if (cur < 0) cur = 0;
+
+        el('chips').innerHTML = setIds.map((id, i) => {
+            const s = songPorId(id);
+            return `<button class="chip ${i === cur ? 'on' : ''}" onclick="irAIndice(${i})">${i + 1} · ${escapeHtml(partesTitulo(s.titulo).main)}</button>`;
+        }).join('');
+
+        const s = songPorId(setIds[cur]);
+        const p = partesTitulo(s.titulo);
+        const t = s.trans || 0;
+        box.innerHTML = `
+            <article class="stage ${prefs.ajuste ? 'wrap' : ''}" id="stage">
+                <div class="s-top">
+                    <div class="s-num">${String(cur + 1).padStart(2, '0')}</div>
+                    <div class="s-title">
+                        <h2>${escapeHtml(p.main)}</h2>
+                        ${p.sub ? `<small>${escapeHtml(p.sub)}</small>` : ''}
+                        ${s.tono ? `<span class="badge">TONO ${escapeHtml(tonoTranspuesto(s.tono, t))}${t ? ` <span style="font-weight:700;opacity:.75;letter-spacing:0">(${t > 0 ? '+' : ''}${t} · orig. ${escapeHtml(s.tono)})</span>` : ''}</span>` : ''}
+                    </div>
+                </div>
+                <div class="s-order">
+                    <button onclick="moverEnSet(-1)" ${cur === 0 ? 'disabled' : ''}>⇦ Antes</button>
+                    <button onclick="moverEnSet(1)" ${cur === setIds.length - 1 ? 'disabled' : ''}>Después ⇨</button>
+                    <button class="rm" onclick="quitarActual()">Quitar</button>
+                </div>
+                <pre class="lyrics">${renderLetra(s.notas, t)}</pre>
+                <details class="notes" ${s.comentario ? 'open' : ''}>
+                    <summary>📝 Notas</summary>
+                    <div class="note-tools">
+                        <button class="btn-b" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" aria-label="Negrita">B</button>
+                        <small>Selecciona texto y pulsa B</small>
+                    </div>
+                    <div class="note-ed" contenteditable="true" data-ph="Escribe una nota…" onpaste="pegarPlano(event)" oninput="notaInput(${s.id}, this)">${s.comentario || ''}</div>
+                </details>
+            </article>`;
+
+        el('pos').textContent = `${cur + 1}/${setIds.length}`;
+        el('btnPrev').disabled = cur === 0;
+        el('btnNext').disabled = cur === setIds.length - 1;
+
+        const act = document.querySelector('.chip.on');
+        if (act) act.scrollIntoView({ inline: 'center', block: 'nearest' });
+    }
+
+    function irAIndice(i) { cur = i; renderSet(); window.scrollTo(0, 0); }
+    function mover(d) {
+        const n = cur + d;
+        if (n < 0 || n >= setIds.length) return;
+        cur = n; renderSet(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function moverEnSet(d) {
+        const n = cur + d;
+        if (n < 0 || n >= setIds.length) return;
+        [setIds[cur], setIds[n]] = [setIds[n], setIds[cur]];
+        cur = n; guardarSet(); renderSet();
+    }
+
+    function quitarActual() {
+        setIds.splice(cur, 1);
+        guardarSet();
+        renderSet();
+        aviso('Quitada del set');
+    }
+
+    function notaInput(id, div) {
+        const s = songPorId(id);
+        if (!s) return;
+        s.comentario = (div.innerHTML === '<br>') ? '' : div.innerHTML;
+        guardar();
+    }
+    function pegarPlano(e) {
+        e.preventDefault();
+        document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain'));
+    }
+
+    // Preferencias de lectura
+    function aplicarPrefs() {
+        document.documentElement.style.setProperty('--lyrics-size', prefs.tam + 'px');
+        const st = el('stage'); if (st) st.classList.toggle('wrap', prefs.ajuste);
+        const es = el('escena'); if (es) es.classList.toggle('wrap', prefs.ajuste);
+        try { localStorage.setItem(CLAVE_PREFS, JSON.stringify(prefs)); } catch (e) {}
+    }
+    function cambiarTamano(d) {
+        prefs.tam = Math.min(32, Math.max(11, prefs.tam + d));
+        aplicarPrefs();
+        aviso('Letra: ' + prefs.tam + ' px');
+    }
+    function alternarAjuste() {
+        prefs.ajuste = !prefs.ajuste;
+        aplicarPrefs();
+        aviso(prefs.ajuste ? 'Líneas ajustadas al ancho' : 'Líneas sin ajustar (desliza de lado)');
+    }
+
+    // Cambiar de tono: T+ sube medio tono y T− lo baja (se recuerda por canción)
+    function cambiarTono(d) {
+        if (!setIds.length) return;
+        const s = songPorId(setIds[cur]);
+        let t = (s.trans || 0) + d;
+        if (Math.abs(t) >= 12) t = 0; // 12 semitonos = el mismo tono
+        s.trans = t;
+        guardar(true);
+        renderSet();
+        if (escenaAbierta()) renderEscena();
+        const signo = t > 0 ? '+' : '';
+        aviso('Tono: ' + (s.tono ? tonoTranspuesto(s.tono, t) + ' ' : '') + (t ? '(' + signo + t + ')' : '(original)'));
+    }
+
+    // Deslizar a los lados para cambiar de canción
+    (function () {
+        let x0 = 0, y0 = 0, ignorar = false;
+        const box = el('viewSet');
+        box.addEventListener('touchstart', e => {
+            const pre = e.target.closest('pre');
+            ignorar = !!(pre && pre.scrollWidth > pre.clientWidth) || !!e.target.closest('.chips, .note-ed');
+            x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+        }, { passive: true });
+        box.addEventListener('touchend', e => {
+            if (ignorar || vista !== 'set') return;
+            const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+            if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.8) mover(dx < 0 ? 1 : -1);
+        }, { passive: true });
+    })();
+
+    // ---------- Importar canciones desde otro archivo del cancionero ----------
+    // Deja solo formato básico en los comentarios (negrita, saltos de línea); lo demás se convierte en texto.
+    function limpiarComentario(html) {
+        const permitido = new Set(['B', 'STRONG', 'I', 'EM', 'BR', 'DIV', 'SPAN', 'P']);
+        const plantilla = document.createElement('template');
+        plantilla.innerHTML = String(html || '');
+        const limpiar = nodo => {
+            const frag = document.createDocumentFragment();
+            nodo.childNodes.forEach(h => {
+                if (h.nodeType === 3) frag.appendChild(document.createTextNode(h.textContent));
+                else if (h.nodeType === 1) {
+                    if (h.tagName === 'SCRIPT' || h.tagName === 'STYLE') return;
+                    if (permitido.has(h.tagName)) {
+                        const e = document.createElement(h.tagName.toLowerCase());
+                        e.appendChild(limpiar(h));
+                        frag.appendChild(e);
+                    } else frag.appendChild(limpiar(h));
+                }
+            });
+            return frag;
+        };
+        const cont = document.createElement('div');
+        cont.appendChild(limpiar(plantilla.content));
+        return cont.innerHTML;
+    }
+
+    async function importarDesdeArchivo(input) {
+        const f = input.files && input.files[0];
+        input.value = '';
+        if (!f) return;
+        let txt;
+        try { txt = await f.text(); } catch (e) { aviso('No se pudo leer el archivo'); return; }
+        let lista = null;
+        const m = txt.match(/<script id="datos-canciones"[^>]*>([\s\S]*?)<\/script>/);
+        try {
+            if (m) lista = JSON.parse(m[1]).canciones;
+            else { const j = JSON.parse(txt); lista = Array.isArray(j) ? j : j.canciones; }
+        } catch (e) {}
+        if (!Array.isArray(lista) || !lista.length) { aviso('Ese archivo no tiene canciones del cancionero', 4500); return; }
+
+        const validas = [];
+        lista.forEach(c => {
+            if (!c || typeof c.titulo !== 'string' || !c.titulo.trim() || typeof c.id !== 'number' || !isFinite(c.id)) return;
+            validas.push({
+                id: c.id,
+                titulo: c.titulo.trim().slice(0, 200),
+                tono: typeof c.tono === 'string' ? c.tono.trim().toUpperCase().slice(0, 10) : '',
+                comentario: typeof c.comentario === 'string' ? limpiarComentario(c.comentario.slice(0, 50000)) : '',
+                notas: typeof c.notas === 'string' ? c.notas.slice(0, 200000) : ''
+            });
+        });
+        if (!validas.length) { aviso('No se encontraron canciones válidas', 4500); return; }
+
+        const nuevas = [], cambiadas = [];
+        validas.forEach(c => {
+            const ya = songPorId(c.id);
+            if (!ya) nuevas.push(c);
+            else if (ya.titulo !== c.titulo || ya.tono !== c.tono || ya.notas !== c.notas || ya.comentario !== c.comentario) cambiadas.push(c);
+        });
+        if (!nuevas.length && !cambiadas.length) { aviso('Ya tienes todas esas canciones tal cual', 4500); return; }
+
+        if (!confirm('El archivo trae ' + validas.length + ' canciones: ' + nuevas.length + ' nuevas y ' + cambiadas.length + ' con cambios respecto a las que tienes.\n\nAceptar: agregar las nuevas y reemplazar las que cambiaron.\nCancelar: no importar nada.')) return;
+
+        nuevas.forEach(c => canciones.push(c));
+        cambiadas.forEach(c => { const i = canciones.findIndex(x => x.id === c.id); canciones[i] = Object.assign({}, canciones[i], c); });
+        guardar();
+        if (vista === 'set') renderSet(); else renderLib();
+        aviso('Importadas: ' + nuevas.length + ' nuevas y ' + cambiadas.length + ' actualizadas', 5000);
+    }
+
+    // ---------- Pantalla limpia (Play): solo título y letra ----------
+    function escenaAbierta() { return el('escena').classList.contains('open'); }
+
+    function iniciarEscenario() {
+        if (!setIds.length) { aviso('Primero elige canciones para tu set'); return; }
+        if (cur >= setIds.length || cur < 0) cur = 0;
+        el('escena').classList.add('open');
+        el('escBar').classList.remove('show');
+        document.body.classList.add('noscroll');
+        renderEscena();
+        // Pantalla completa del navegador cuando el dispositivo lo permite (en iPhone no está disponible)
+        try {
+            const d = document.documentElement;
+            if (d.requestFullscreen && !document.fullscreenElement) d.requestFullscreen().catch(() => {});
+        } catch (e) {}
+    }
+
+    function salirEscenario() {
+        el('escena').classList.remove('open');
+        document.body.classList.remove('noscroll');
+        try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); } catch (e) {}
+        if (vista === 'set') renderSet(); else renderLib();
+    }
+
+    function renderEscena() {
+        const s = songPorId(setIds[cur]);
+        if (!s) { salirEscenario(); return; }
+        const t = s.trans || 0;
+        el('escPos').textContent = (cur + 1) + '/' + setIds.length;
+        el('escTitulo').textContent = partesTitulo(s.titulo).main;
+        el('escTono').textContent = s.tono ? 'TONO ' + tonoTranspuesto(s.tono, t) : '';
+        el('escTono').style.display = s.tono ? '' : 'none';
+        el('escLetra').innerHTML = renderLetra(s.notas, t);
+        el('escBody').scrollTop = 0;
+        el('escPrev').disabled = cur === 0;
+        el('escNext').disabled = cur === setIds.length - 1;
+    }
+
+    function moverEscenario(d) {
+        const n = cur + d;
+        if (n < 0 || n >= setIds.length) return;
+        cur = n;
+        renderEscena();
+    }
+
+    function alternarControlesEscenario() {
+        el('escBar').classList.toggle('show');
+    }
+
+    // Deslizar a los lados en la pantalla limpia para cambiar de canción
+    (function () {
+        let x0 = 0, y0 = 0, ignorar = false;
+        const box = el('escBody');
+        box.addEventListener('touchstart', e => {
+            const pre = e.target.closest('pre');
+            ignorar = !!(pre && pre.scrollWidth > pre.clientWidth);
+            x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+        }, { passive: true });
+        box.addEventListener('touchend', e => {
+            if (ignorar || !escenaAbierta()) return;
+            const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+            if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.8) moverEscenario(dx < 0 ? 1 : -1);
+        }, { passive: true });
+    })();
+
+    document.addEventListener('keydown', e => {
+        if (!escenaAbierta()) return;
+        if (e.key === 'Escape') salirEscenario();
+        else if (e.key === 'ArrowRight') moverEscenario(1);
+        else if (e.key === 'ArrowLeft') moverEscenario(-1);
+    });
+
+    // ---------- Editor ----------
+    function estadoEditor() {
+        return { titulo: el('edTitulo').value, tono: el('edTono').value, notas: el('edTexto').value };
+    }
+    function ponerEstado(e) {
+        el('edTitulo').value = e.titulo; el('edTono').value = e.tono; el('edTexto').value = e.notas;
+    }
+    function igual(a, b) { return a.titulo === b.titulo && a.tono === b.tono && a.notas === b.notas; }
+
+    function abrirEditor(id) {
+        const s = id == null ? null : songPorId(id);
+        editor.id = s ? s.id : null;
+        editor.base = s ? { titulo: s.titulo, tono: s.tono || '', notas: s.notas || '' } : { titulo: '', tono: '', notas: '' };
+        editor.redo = [];
+        ponerEstado(editor.base);
+        el('edHead').textContent = s ? 'Editar canción' : 'Nueva canción';
+        el('btnEliminar').style.display = s ? 'block' : 'none';
+        el('btnRedo').disabled = true;
+        el('hlPal').classList.remove('open');
+        el('editor').classList.add('open');
+        document.body.classList.add('noscroll');
+        if (!s) setTimeout(() => el('edTitulo').focus(), 120);
+    }
+
+    function cerrarEditor() {
+        el('editor').classList.remove('open');
+        document.body.classList.remove('noscroll');
+    }
+
+    function editorCambio() {
+        editor.redo = [];
+        el('btnRedo').disabled = true;
+    }
+
+    function revertirEditor() {
+        const ahora = estadoEditor();
+        if (igual(ahora, editor.base)) { aviso('No hay cambios que revertir'); return; }
+        editor.redo.push(ahora);
+        ponerEstado(editor.base);
+        el('btnRedo').disabled = false;
+    }
+
+    function rehacerEditor() {
+        if (!editor.redo.length) return;
+        ponerEstado(editor.redo.pop());
+        el('btnRedo').disabled = editor.redo.length === 0;
+    }
+
+    // Aplica un estilo (negrita o resaltado) a todo el texto seleccionado, sea una línea o varias.
+    // decidir(seleccionados) calcula el valor a aplicar; aplicar(caracter, valor) lo escribe.
+    function modificarSeleccion(decidir, aplicar) {
+        const ta = el('edTexto');
+        const a = ta.selectionStart, b = ta.selectionEnd;
+        if (a === b) return false;
+
+        let off = 0;
+        const info = ta.value.split('\n').map(l => {
+            const ini = off, fin = off + l.length;
+            off = fin + 1;
+            const { chars, pos } = parsearLinea(l);
+            let idx = [];
+            if (a < fin && b > ini) {
+                const rs = Math.max(a, ini) - ini, re = Math.min(b, fin) - ini;
+                chars.forEach((x, i) => { if (pos[i] >= rs && pos[i] < re) idx.push(i); });
+                if (!idx.some(i => chars[i].c.trim() !== '')) idx = []; // se ignoran las líneas en blanco
+            }
+            return { l, chars, idx };
+        });
+
+        const sel = [];
+        info.forEach(x => x.idx.forEach(i => sel.push(x.chars[i])));
+        if (!sel.length) return false;
+        const valor = decidir(sel.filter(c => c.c.trim() !== ''));
+
+        let nuevoOff = 0, selIni = -1, selFin = -1;
+        const salida = info.map(x => {
+            let res = x.l;
+            if (x.idx.length) {
+                x.idx.forEach(i => aplicar(x.chars[i], valor));
+                const s = serializarLinea(x.chars);
+                res = s.texto;
+                if (selIni < 0) selIni = nuevoOff + s.pos[x.idx[0]];
+                selFin = nuevoOff + s.pos[x.idx[x.idx.length - 1]] + 1;
+            }
+            nuevoOff += res.length + 1;
+            return res;
+        });
+
+        const st = ta.scrollTop;
+        ta.value = salida.join('\n');
+        ta.focus();
+        ta.setSelectionRange(selIni, selFin);
+        ta.scrollTop = st;
+        editorCambio();
+        return true;
+    }
+
+    function negritaLetra() {
+        const ta = el('edTexto');
+        if (ta.selectionStart === ta.selectionEnd) { aviso('Selecciona primero el texto'); return; }
+        // si todo lo seleccionado ya está en negrita se la quita; si no, se la pone
+        modificarSeleccion(sel => !sel.every(c => c.b), (c, v) => { c.b = v; });
+    }
+
+    function alternarPaleta() {
+        el('hlPal').classList.toggle('open');
+    }
+
+    function resaltar(color) {
+        const ta = el('edTexto');
+        if (ta.selectionStart === ta.selectionEnd) { aviso('Selecciona primero el texto que quieres resaltar'); return; }
+        modificarSeleccion(() => color, (c, v) => { c.h = v; });
+    }
+
+    // Quita el resaltado del texto seleccionado (una o varias líneas).
+    // Sin selección, quita el resaltado que esté justo donde está el cursor.
+    function quitarResaltado() {
+        const ta = el('edTexto');
+        if (ta.selectionStart !== ta.selectionEnd) {
+            if (!modificarSeleccion(() => 0, (c, v) => { c.h = v; })) aviso('No hay texto para quitar el resaltado');
+            return;
+        }
+        const t = ta.value, cur = ta.selectionStart;
+        const ini = cur === 0 ? 0 : t.lastIndexOf('\n', cur - 1) + 1;
+        let fin = t.indexOf('\n', cur);
+        if (fin < 0) fin = t.length;
+        const { chars, pos } = parsearLinea(t.slice(ini, fin));
+        let k = -1;
+        for (let i = 0; i < chars.length; i++) if (pos[i] < cur - ini) k = i;
+        const c = [k, k + 1].find(i => i >= 0 && i < chars.length && chars[i].h);
+        if (c === undefined) { aviso('No hay resaltado aquí. Selecciona el texto para quitarlo.'); return; }
+        const color = chars[c].h;
+        let i0 = c, i1 = c;
+        while (i0 > 0 && chars[i0 - 1].h === color) i0--;
+        while (i1 < chars.length - 1 && chars[i1 + 1].h === color) i1++;
+        for (let i = i0; i <= i1; i++) chars[i].h = 0;
+        const s = serializarLinea(chars);
+        const st = ta.scrollTop;
+        ta.value = t.slice(0, ini) + s.texto + t.slice(fin);
+        ta.focus();
+        ta.setSelectionRange(ini + s.pos[i0], ini + s.pos[i0]);
+        ta.scrollTop = st;
+        editorCambio();
+    }
+
+    // Quita todo el resaltado de la canción que se está editando
+    function quitarTodoResaltado() {
+        const ta = el('edTexto');
+        const antes = ta.value;
+        const nuevo = antes.split('\n').map(l => {
+            const { chars } = parsearLinea(l);
+            if (!chars.some(c => c.h)) return l;
+            chars.forEach(c => { c.h = 0; });
+            return serializarLinea(chars).texto;
+        }).join('\n');
+        if (nuevo === antes) { aviso('No hay resaltado en esta canción'); return; }
+        const st = ta.scrollTop;
+        ta.value = nuevo;
+        ta.scrollTop = st;
+        editorCambio();
+        aviso('Resaltado quitado');
+    }
+
+    // Limpia lo que traen los textos copiados de páginas web: saltos de línea de Windows, espacios especiales y tabuladores
+    function normalizarTexto(t) {
+        return t.replace(/\r\n?/g, '\n').replace(/[   ]/g, ' ').replace(/[​﻿]/g, '').replace(/\t/g, '    ');
+    }
+
+    function guardarEditor() {
+        const e = estadoEditor();
+        const titulo = e.titulo.trim();
+        if (!titulo) { aviso('Escribe el nombre de la canción'); el('edTitulo').focus(); return; }
+        const tono = e.tono.trim().toUpperCase();
+        const notas = normalizarTexto(e.notas);
+
+        if (editor.id == null) {
+            // Una canción nueva se suma a Mi set y se abre ahí, con acordes en color y botones T+ / T−
+            const id = Date.now();
+            canciones.push({ id, titulo, tono, comentario: '', notas });
+            setIds.push(id);
+            cur = setIds.length - 1;
+            guardar(); guardarSet();
+            cerrarEditor();
+            irA('set');
+            aviso('Canción agregada a tu set');
+            return;
+        }
+
+        const s = songPorId(editor.id);
+        s.titulo = titulo; s.tono = tono; s.notas = notas;
+        aviso('✔ Guardado');
+        guardar();
+        cerrarEditor();
+        if (vista === 'set') renderSet(); else renderLib();
+    }
+
+    function eliminarDesdeEditor() {
+        const s = songPorId(editor.id);
+        if (!s) return;
+        if (!confirm(`¿Eliminar "${s.titulo}"?`)) return;
+        canciones = canciones.filter(x => x.id !== s.id);
+        setIds = setIds.filter(id => id !== s.id);
+        guardar(); guardarSet();
+        cerrarEditor();
+        aviso('Canción eliminada');
+        if (vista === 'set') renderSet(); else renderLib();
+    }
+
+    // ---------- Inicio ----------
+    aplicarPrefs();
+    renderLib();
+    actualizarEstadoArchivo();
+
+    // Funciona sin internet cuando está publicado: el service worker guarda una copia de la app
+    if ('serviceWorker' in navigator && EN_LINEA) {
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+    }
+</script>
+
+</body>
+</html>
