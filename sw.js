@@ -1,7 +1,7 @@
 // Guarda una copia de la app para que abra sin internet.
 // Con internet siempre pide primero la versión más nueva (así llegan tus canciones nuevas);
 // sin internet usa la copia guardada.
-const CACHE = 'cancionero-v1';
+const CACHE = 'cancionero-v2';
 const ARCHIVOS = [
   './',
   'index.html',

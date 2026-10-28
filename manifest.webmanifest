@@ -1,7 +1,7 @@
 {
   "id": "cancionero",
-  "name": "Cancionero",
-  "short_name": "Cancionero",
+  "name": "Cancionero Ishi",
+  "short_name": "Cancionero Ishi",
   "description": "Cancionero con letras, acordes y cambio de tono",
   "lang": "es",
   "start_url": "./",
