@@ -149,7 +149,7 @@
         pre.lyrics strong { color: var(--strong); }
         pre.lyrics:empty::before { content: "Sin letra todavía. Toca ✎ para pegar la letra con acordes."; color: var(--mut); font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; font-style: italic; white-space: normal; }
 
-        details.notes { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; }
+        details.notes { margin: 4px 0 10px; border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
         details.notes summary { font-weight: 700; color: var(--mut); min-height: 36px; display: flex; align-items: center; cursor: pointer; list-style: none; }
         details.notes summary::-webkit-details-marker { display: none; }
         .note-tools { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
@@ -166,8 +166,9 @@
         .rail.open .rail-tools { display: flex; }
         .rail button { width: 46px; height: 46px; border-radius: 50%; border: none; background: var(--panel2); color: var(--tx); font-size: 17px; font-weight: 800; }
         .rail button.main { background: var(--acc); color: var(--acc-tx); }
-        .rail .rail-toggle { width: 44px; height: 44px; font-size: 15px; border: 1px solid var(--line); background: var(--overlay); color: var(--acc-ink); backdrop-filter: blur(6px); opacity: 0.75; box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+        .rail .rail-toggle { width: 44px; height: 44px; font-size: 15px; border: 1px solid var(--line); background: var(--overlay); color: #f5a524; font-weight: 900; backdrop-filter: blur(6px); opacity: 0.85; box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
         .rail.open .rail-toggle { opacity: 1; }
+        :root[data-tema="claro"] .rail .rail-toggle { color: #b86e00; }   /* amarillo más oscuro para que se lea sobre fondo claro */
 
         /* Barra de paginación */
         .pager { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: none; align-items: center; gap: 10px; padding: 10px 14px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(to top, var(--bg) 70%, transparent); }
@@ -186,6 +187,41 @@
         .btn-html { position: relative; border: 1px solid var(--line); background: var(--panel); color: var(--acc-ink); font-weight: 800; font-size: 13px; border-radius: 12px; min-height: 36px; padding: 0 12px; }
         .head-btns { display: flex; gap: 8px; align-items: center; }
         .btn-tema { width: 40px; padding: 0; font-size: 17px; }
+        html { color-scheme: dark; }
+        :root[data-tema="claro"] { color-scheme: light; }
+        .btn-adm { display: none; }
+        body.admin .btn-adm { display: inline-block; }
+        .tag-admin { display: none; margin-left: 8px; background: var(--coral); color: #fff; font-size: 9px; font-weight: 900; letter-spacing: 1px; padding: 2px 6px; border-radius: 6px; vertical-align: middle; }
+        body.admin .tag-admin { display: block; width: fit-content; margin: 4px 0 0; }
+        .brand { white-space: nowrap; }
+        body.admin #btnHtml { width: 40px; padding: 0; font-size: 0; }
+        body.admin #btnHtml::before { content: '💾'; font-size: 17px; }
+        .seg.tres { grid-template-columns: 1fr 1fr 1fr; }
+        .seg.tres button { font-size: 14px; padding: 0 4px; }
+        .seg.tres b { margin-left: 4px; padding: 1px 6px; }
+        .sem-head { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; margin-bottom: 10px; }
+        .sem-head select { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); font-size: 15px; font-weight: 700; padding: 0 10px; }
+        .sem-head .fila { display: flex; gap: 8px; margin-top: 8px; }
+        .sem-head .fila button { flex: 1; min-height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); font-weight: 700; font-size: 13px; }
+        .sem-head .aviso-sem { margin-top: 8px; font-size: 13px; color: var(--coral); font-weight: 700; line-height: 1.35; }
+        .set-row { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; margin-bottom: 6px; }
+        .set-row .nm { flex: 1; min-width: 0; font-weight: 700; font-size: 14px; line-height: 1.25; }
+        .set-row .nm small { display: block; color: var(--mut); font-weight: 400; font-size: 12px; }
+        .set-row button { width: 38px; height: 38px; flex: 0 0 auto; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); font-weight: 800; }
+        .set-row button.rojo { color: var(--coral); }
+        .set-row.pick { cursor: pointer; }
+        .set-row.pick.on { border-color: var(--acc); background: linear-gradient(160deg, var(--tile-on), var(--panel)); }
+        .set-row .ck { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; flex: 0 0 auto; }
+        .set-row.pick.on .ck { background: var(--acc); border-color: var(--acc); color: var(--acc-tx); }
+        .ed-body input[type="date"], .ed-body input[type="password"], .ed-body input[type="search"] { width: 100%; min-height: 48px; padding: 0 14px; font-size: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--tx); outline: none; }
+        .entrada { position: fixed; inset: 0; z-index: 400; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
+        .entrada.open { display: flex; }
+        .entrada h1 { margin: 0 0 8px; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; color: var(--acc-ink); }
+        .entrada .grande { width: 100%; max-width: 340px; min-height: 62px; border-radius: 18px; border: 2px solid var(--line); background: var(--panel); color: var(--tx); font-size: 18px; font-weight: 800; }
+        .entrada .grande.p { background: var(--acc); border-color: var(--acc); color: var(--acc-tx); }
+        .entrada input { width: 100%; max-width: 340px; min-height: 54px; padding: 0 16px; font-size: 17px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--tx); outline: none; }
+        .entrada .err { color: var(--coral); font-weight: 700; min-height: 20px; text-align: center; }
+        .entrada .chico { background: none; border: none; color: var(--mut); text-decoration: underline; font-size: 13px; padding: 8px; }
         .btn-html .dot { display: none; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); border: 2px solid var(--bg); }
         .estado { margin: -4px 4px 12px; font-weight: 700; }
         .estado.ok { color: var(--ok); }
@@ -259,14 +295,16 @@
 
 <header class="head">
     <div class="brand-row">
-        <div class="brand">♪ Cancionero Ishi</div>
+        <div class="brand" onclick="tocarMarca()">♪ Cancionero Ishi<span class="tag-admin">ADMIN</span></div>
         <div class="head-btns">
+        <button class="btn-html btn-tema btn-adm" id="btnAdmin" onclick="abrirPanelAdmin()" aria-label="Administración">⚙</button>
         <button class="btn-html btn-tema" id="btnTema" onclick="alternarTema()" aria-label="Cambiar entre fondo oscuro y fondo claro">☀</button>
         <button class="btn-html" id="btnHtml" onclick="guardarEnArchivo()" aria-label="Guardar los cambios en el archivo HTML"><span id="txtGuardar">⬇ HTML</span><span class="dot" id="dotHtml"></span></button>
         </div>
     </div>
-    <div class="seg">
+    <div class="seg" id="seg">
         <button id="tabLib" class="on" onclick="irA('lib')">Biblioteca</button>
+        <button id="tabSem" onclick="irA('sem')" style="display:none">Semana<b id="semCount">0</b></button>
         <button id="tabSet" onclick="irA('set')">Mi set<b id="setCount">0</b></button>
     </div>
 </header>
@@ -284,6 +322,7 @@
 <!-- MI SET -->
 <section class="view" id="viewSet">
     <button class="play-row" onclick="iniciarEscenario()">▶ Play · pantalla limpia</button>
+    <div id="semHead"></div>
     <div class="chips" id="chips"></div>
     <div id="stageBox"></div>
 </section>
@@ -346,7 +385,95 @@
             <button class="t" onmousedown="event.preventDefault()" onclick="quitarTodoResaltado()">Quitar todo</button>
         </div>
         <textarea id="edTexto" oninput="editorCambio()" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Pega aquí la letra con acordes. Selecciona texto (una o varias líneas) y usa B para negrita o 🖍 para resaltar con color."></textarea>
+        <button class="danger" id="btnOficial" style="display:none;border-color:var(--acc);color:var(--acc-ink)" onclick="restaurarOficial()">↺ Usar la versión oficial (trae cambios nuevos)</button>
         <button class="danger" id="btnEliminar" onclick="eliminarDesdeEditor()">🗑 Eliminar esta canción</button>
+    </div>
+</div>
+
+<!-- ADMINISTRACIÓN (solo se usa en modo administrador) -->
+<div class="editor" id="panelAdmin">
+    <div class="ed-bar">
+        <button class="cancel" onclick="cerrarPanelAdmin()">Cerrar</button>
+        <h3>Administración</h3>
+        <button class="ok" id="btnPublicar" onclick="publicarEnGitHub()">⬆ Publicar</button>
+    </div>
+    <div class="ed-body">
+        <div class="hint estado ok" id="admEstado"></div>
+        <label>Sets oficiales (los ven todos)</label>
+        <div id="admSets"></div>
+        <button class="btn-acc" onclick="abrirSetEd(null, false)">＋ Nuevo set</button>
+        <button class="link-btn" style="margin:0" onclick="abrirSetEd(null, true)">Crear un set con las canciones de Mi set</button>
+        <label style="margin-top:10px">Conexión con GitHub</label>
+        <div class="hint" id="admRepo" style="margin:0"></div>
+        <button class="link-btn" style="margin:0" onclick="abrirCfgAdmin('token')">Cambiar el token</button>
+        <button class="link-btn" style="margin:0" onclick="salirAdmin()">Salir del modo administrador</button>
+        <button class="danger" onclick="quitarAdmin()">Quitar el modo administrador de este teléfono</button>
+    </div>
+</div>
+
+<div class="editor" id="setEd">
+    <div class="ed-bar">
+        <button class="cancel" onclick="cerrarSetEd()">Cancelar</button>
+        <h3 id="setEdHead">Set oficial</h3>
+        <button class="ok" onclick="guardarSetEd()">Guardar</button>
+    </div>
+    <div class="ed-body">
+        <div><label for="setNombre">Nombre</label><input type="text" id="setNombre" placeholder="Ej.: Domingo 8 de noviembre" autocomplete="off"></div>
+        <div><label for="setFecha">Fecha en que se tocará</label><input type="date" id="setFecha"></div>
+        <div><label>Canciones, en orden</label><div id="setEdLista"></div></div>
+        <button class="btn-acc" onclick="abrirPicker('setEd')">＋ Agregar canciones</button>
+        <button class="danger" id="btnSetEliminar" onclick="eliminarSetEd()">🗑 Eliminar este set</button>
+    </div>
+</div>
+
+<div class="editor" id="cfgAdmin">
+    <div class="ed-bar">
+        <button class="cancel" onclick="cerrarCfgAdmin()">Cancelar</button>
+        <h3 id="cfgHead">Configurar administrador</h3>
+        <button class="ok" id="btnCfgGuardar" onclick="guardarCfgAdmin()">Guardar</button>
+    </div>
+    <div class="ed-body">
+        <div class="hint" id="cfgAyuda" style="margin:0"></div>
+        <div id="cfgClaveBox">
+            <div><label for="cfgClave">Contraseña de administrador</label><input type="password" id="cfgClave" autocomplete="new-password"></div>
+            <div style="margin-top:10px"><label for="cfgClave2">Repite la contraseña</label><input type="password" id="cfgClave2" autocomplete="new-password"></div>
+        </div>
+        <div><label for="cfgToken">Token de GitHub</label><input type="password" id="cfgToken" autocomplete="off" placeholder="github_pat_…"></div>
+        <div><label for="cfgVenc">El token vence el (opcional, para avisarte)</label><input type="date" id="cfgVenc"></div>
+        <div id="cfgRepoBox">
+            <div><label for="cfgOwner">Usuario de GitHub</label><input type="text" id="cfgOwner" autocomplete="off" autocapitalize="off"></div>
+            <div style="margin-top:10px"><label for="cfgRepo">Repositorio</label><input type="text" id="cfgRepo" autocomplete="off" autocapitalize="off"></div>
+            <div style="margin-top:10px"><label for="cfgPath">Archivo</label><input type="text" id="cfgPath" autocomplete="off" autocapitalize="off"></div>
+            <div style="margin-top:10px"><label for="cfgBranch">Rama</label><input type="text" id="cfgBranch" autocomplete="off" autocapitalize="off"></div>
+        </div>
+    </div>
+</div>
+
+<div class="editor" id="picker">
+    <div class="ed-bar">
+        <h3>Agregar canciones</h3>
+        <button class="ok" onclick="cerrarPicker()">Listo</button>
+    </div>
+    <div class="ed-body">
+        <input type="search" id="pickBuscar" placeholder="Buscar canción…" oninput="renderPicker()" autocomplete="off">
+        <div id="pickLista"></div>
+    </div>
+</div>
+
+<div class="entrada" id="entrada">
+    <h1>♪ Cancionero Ishi</h1>
+    <div id="entradaElegir" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%">
+        <div class="hint" style="margin:0;text-align:center">¿Cómo quieres entrar?</div>
+        <button class="grande p" onclick="entrarUsuario()">Usuario</button>
+        <button class="grande" onclick="entrarAdmin()">Administrador</button>
+    </div>
+    <div id="entradaClave" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%">
+        <div class="hint" style="margin:0;text-align:center">Contraseña de administrador</div>
+        <input type="password" id="entClave" autocomplete="current-password" onkeydown="if(event.key==='Enter')confirmarClave()">
+        <div class="err" id="entErr"></div>
+        <button class="grande p" onclick="confirmarClave()">Entrar</button>
+        <button class="chico" onclick="mostrarEntrada()">‹ Volver</button>
+        <button class="chico" onclick="quitarAdmin()">Olvidé mi contraseña: quitar el modo administrador de este teléfono</button>
     </div>
 </div>
 
@@ -379,7 +506,8 @@
 <!-- DATOS: las canciones viven aquí, dentro del archivo. El botón "⬇ HTML" de la app reescribe este bloque con tus canciones actuales. -->
 <script id="datos-canciones" type="application/json">
 {
- "version": 1792980219171,
+ "version": 1793581898013,
+ "sets": [],
  "canciones": [
   {
    "id": 1,
@@ -393,7 +521,7 @@
    "titulo": "Los muros caerán - MSM",
    "tono": "CM",
    "comentario": "",
-   "notas": "[Intro]\nCm - G# - A# Cm\n\n     Cm              A#\nCuando le canto la tierra se estremece\nG#         A#   Cm\nLos muros   caerán\n   Cm              A#\nCuando le adoro se rompen las cadenas\n     G#   A#    Cm\nLos muros     caerán\n\n\n(C-D#-F-G-A#-A#-C)\n\nCoro\n   Cm                    G#\nLos muros caerán  los muros caerán\n              A#    Gm   Cm\nAl sonar mi cantico    caerán\n   Cm                  G#\nLos muros caerán  los muros caerán\n              A#     Gm   Cm\nCon gritos de júbilo    caerán\n\n\nIntro\n\n\n Cm              A#\nCuando yo danzo aumenta  Dios mis fuerzas\nG#      A#   Cm\nLos muros   caerán\nCm                  A#\nCuando yo grito mis enemigos huyen\nG#      A#     Cm\nLos muros    caerán\n\n(C-D#-F-G-A#-A#-C)\n\nAntes del intermedio del bajo\nG-F-D#-D   C-D-D#-F-A#-C\n\n\nPuente\nCm         A#\nCaen los muros  ,   caen los muros  X 8\nF             Gm      Cm       A#\nSaltando, saltando, los muros caeran"
+   "notas": "[Intro]\nCm - G# - A# Cm\n\n     Cm              A#\nCuando le canto la tierra se estremece\nG#         A#   Cm\nLos muros   caerán\n   Cm              A#\nCuando le adoro se rompen las cadenas\n     G#   A#    Cm\nLos muros     caerán\n\n\n(C-D#-F-G-A#-A#-C)\n\nCoro\n   Cm                    G#\nLos muros caerán  los muros caerán\n              A#    Gm   Cm\nAl sonar mi cantico    caerán\n   Cm                  G#\nLos muros caerán  los muros caerán\n              A#     Gm   Cm\nCon gritos de júbilo    caerán\n\n\nIntro\n\n\n Cm              A#\nCuando yo danzo aumenta  Dios mis fuerzas\nG#      A#   Cm\nLos muros   caerán\nCm                  A#\nCuando yo grito mis enemigos huyen\nG#      A#     Cm\nLos muros    caerán\n\n(C-D#-F-G-A#-A#-C)\n\nAntes del intermedio del bajo\nG-F-D#-D   C-D-D#-F-A#-C\n\n\nPuente\nCm         G#\nCaen los muros  ,   caen los muros  X 8\nF             Gm      Cm       A#\nSaltando, saltando, los muros caeran"
   },
   {
    "id": 3,
@@ -430,9 +558,15 @@
 <script>
     // Copia del documento tal como llegó, antes de que la app lo modifique.
     // El botón "⬇ HTML" la usa para generar el archivo actualizado.
-    const FUENTE_INICIAL = document.documentElement.outerHTML
-        .replace(/ data-tema="[^"]*"/, '')
-        .replace(/(<meta name="theme-color" content=")[^"]*(")/, '$1#15130f$2');
+    // Solo se limpia la cabecera (antes de <title>): así los ajustes de tema de quien exporta no viajan en el archivo,
+    // y ninguna expresión puede coincidir con su propio texto más abajo en el código.
+    const FUENTE_INICIAL = (function () {
+        const f = document.documentElement.outerHTML;
+        const corte = f.indexOf('<title>');
+        return f.slice(0, corte)
+            .replace(/ data-tema="[^"]*"/, '')
+            .replace(/(name="theme-color" content=")[^"]*(")/, '$1#15130f$2') + f.slice(corte);
+    })();
 
     // El archivo HTML es la fuente principal de las canciones. El navegador solo guarda una copia de trabajo
     // para no perder lo que agregues o cambies mientras no descargues el HTML actualizado.
@@ -452,6 +586,118 @@
     let canciones = copia(DATOS.canciones);
     let baseActual = DATOS.version;   // versión del archivo sobre la que se está trabajando
     let dirty = false;                // true = hay cambios que todavía no están en el archivo HTML
+    let snap = null;                  // copia de las canciones OFICIALES tal como llegaron la última vez (sirve para saber qué cambió cada quien)
+    let conflictos = {};              // canciones donde el archivo y este teléfono cambiaron lo mismo: { id: { campos, oficial } }
+    let resumenFusion = null;
+    let setsOficiales = [];           // sets oficiales (los arma el administrador): [{ id, nombre, fecha, canciones: [ids] }]
+
+    // ---------- Fusión: una versión nueva del archivo no pisa lo que cada persona personalizó ----------
+    const CAMPOS = ['titulo', 'tono', 'comentario', 'notas'];
+    const valorCampo = (c, k) => (c && typeof c[k] === 'string') ? c[k] : '';
+    function snapDe(lista) { const m = {}; sinVista(lista).forEach(c => { m[c.id] = c; }); return m; }
+
+    // Diferencias por líneas entre dos textos: lista de tramos { bs, be, lines } = "las líneas base[bs..be) pasan a ser lines"
+    function tramos(B, X) {
+        const n = B.length, m = X.length, w = m + 1;
+        const t = new Uint16Array((n + 1) * w);
+        for (let i = n - 1; i >= 0; i--) {
+            for (let j = m - 1; j >= 0; j--) {
+                t[i * w + j] = B[i] === X[j] ? t[(i + 1) * w + j + 1] + 1 : Math.max(t[(i + 1) * w + j], t[i * w + j + 1]);
+            }
+        }
+        const out = [];
+        let i = 0, j = 0, bs = 0, xs = 0;
+        const cerrar = () => { if (i > bs || j > xs) out.push({ bs, be: i, lines: X.slice(xs, j) }); };
+        while (i < n && j < m) {
+            if (B[i] === X[j]) { cerrar(); i++; j++; bs = i; xs = j; }
+            else if (t[(i + 1) * w + j] >= t[i * w + j + 1]) i++;
+            else j++;
+        }
+        i = n; j = m; cerrar();
+        return out;
+    }
+
+    // Mezcla tres versiones de una letra: la oficial anterior (base), la de la persona (mia) y la oficial nueva (nueva).
+    // Los cambios en líneas distintas se juntan; si los dos cambiaron las mismas líneas, se queda lo de la persona.
+    function fusionarTexto(base, mia, nueva) {
+        if (mia === base) return { texto: nueva, choques: 0 };
+        if (nueva === base || nueva === mia) return { texto: mia, choques: 0 };
+        const B = base.split('\n'), M = mia.split('\n'), N = nueva.split('\n');
+        if ((B.length + 1) * (Math.max(M.length, N.length) + 1) > 4000000) return { texto: mia, choques: 1 };
+        const hm = tramos(B, M), hn = tramos(B, N);
+        const choca = (a, b) => a.bs < b.be && b.bs < a.be;
+        const aplicar = (ini, fin, hs) => {
+            const r = []; let p = ini;
+            hs.forEach(h => { for (; p < h.bs; p++) r.push(B[p]); r.push(...h.lines); p = h.be; });
+            for (; p < fin; p++) r.push(B[p]);
+            return r;
+        };
+        const out = []; let i = 0, j = 0, pos = 0, choques = 0;
+        while (i < hm.length || j < hn.length) {
+            const a = hm[i], b = hn[j];
+            if (a && b && choca(a, b)) {
+                let ini = Math.min(a.bs, b.bs), fin = Math.max(a.be, b.be);
+                const ca = [a], cb = [b]; i++; j++;
+                for (let crecio = true; crecio;) {
+                    crecio = false;
+                    while (i < hm.length && choca(hm[i], { bs: ini, be: fin })) { ca.push(hm[i]); fin = Math.max(fin, hm[i].be); ini = Math.min(ini, hm[i].bs); i++; crecio = true; }
+                    while (j < hn.length && choca(hn[j], { bs: ini, be: fin })) { cb.push(hn[j]); fin = Math.max(fin, hn[j].be); ini = Math.min(ini, hn[j].bs); j++; crecio = true; }
+                }
+                for (; pos < ini; pos++) out.push(B[pos]);
+                const ra = aplicar(ini, fin, ca), rb = aplicar(ini, fin, cb);
+                if (JSON.stringify(ra) !== JSON.stringify(rb)) choques++;
+                out.push(...ra);                      // ante un choque gana la versión de la persona
+                pos = fin;
+            } else {
+                const tomaA = a && (!b || a.bs <= b.bs);
+                const h = tomaA ? a : b;
+                for (; pos < h.bs; pos++) out.push(B[pos]);
+                out.push(...h.lines);
+                pos = h.be;
+                if (tomaA) i++; else j++;
+            }
+        }
+        for (; pos < B.length; pos++) out.push(B[pos]);
+        return { texto: out.join('\n'), choques };
+    }
+
+    function fusionar(locales, base, oficiales, conflictosPrevios) {
+        const L = {}, O = {};
+        locales.forEach(c => { L[c.id] = c; });
+        oficiales.forEach(c => { O[c.id] = c; });
+        const lista = [], conf = {};
+        let nuevas = 0, actualizadas = 0;
+        oficiales.forEach(o => {
+            const l = L[o.id], b = base ? base[o.id] : null;
+            if (!l) {
+                if (b) return;                       // la persona la eliminó: se respeta
+                lista.push(copia(o)); nuevas++; return;
+            }
+            const m = Object.assign({}, l);          // conserva todo lo suyo (incluido el tono transpuesto)
+            let cambio = false;
+            const choques = new Set(((conflictosPrevios && conflictosPrevios[o.id]) || {}).campos || []);
+            CAMPOS.forEach(k => {
+                const lv = valorCampo(l, k), ov = valorCampo(o, k);
+                if (lv === ov) { choques.delete(k); return; }
+                if (!b) { choques.add(k); return; }  // sin copia base no se puede saber quién cambió: no se pisa nada
+                const bv = valorCampo(b, k);
+                if (lv === bv) { m[k] = ov; cambio = true; choques.delete(k); return; }   // la persona no tocó este dato: se actualiza al oficial
+                if (ov === bv) return;                                                       // solo lo cambió la persona: se queda
+                if (k === 'notas') {
+                    // La letra se mezcla línea por línea: se conservan sus comentarios y resaltados y entran las correcciones oficiales
+                    const r = fusionarTexto(bv, lv, ov);
+                    m[k] = r.texto; cambio = true;
+                    if (r.choques) choques.add(k); else choques.delete(k);
+                } else choques.add(k);                                                       // los dos cambiaron lo mismo: gana lo de la persona
+            });
+            if (cambio) actualizadas++;
+            if (choques.size) conf[o.id] = { campos: Array.from(choques), oficial: copia(sinVista([o])[0]) };
+            lista.push(m);
+        });
+        // Canciones propias (o que ya no vienen en el archivo): se conservan siempre
+        locales.forEach(l => { if (!O[l.id]) lista.push(l); });
+        return { lista, conflictos: conf, resumen: { nuevas, actualizadas, conflictos: Object.keys(conf).length } };
+    }
 
     (function cargarCanciones() {
         let local = null;
@@ -466,21 +712,169 @@
             } catch (e) {}
         }
         if (local && Array.isArray(local.canciones)) {
+            snap = local.snap || null;
+            conflictos = local.conflictos || {};
             if (local.base >= DATOS.version) {
                 // La copia del navegador es igual o más nueva que el archivo
                 canciones = local.canciones; baseActual = local.base; dirty = !!local.dirty;
-            } else if (local.dirty) {
-                // El archivo es más nuevo, pero en este navegador hay cambios sin descargar
-                const usarArchivo = confirm('Este archivo trae una versión más nueva de tus canciones, pero en este navegador hay cambios que no has descargado.\n\nAceptar: usar la versión del archivo (esos cambios se perderán).\nCancelar: seguir con los cambios de este navegador.');
-                if (!usarArchivo) { canciones = local.canciones; baseActual = local.base; dirty = true; }
+                if (!snap) snap = local.dirty ? snapDe(DATOS.canciones) : snapDe(local.canciones);
+            } else {
+                // El archivo trae una versión nueva: se fusiona con lo de este teléfono
+                if (!snap && !local.dirty) snap = snapDe(local.canciones);   // sin cambios propios: lo que había era la versión oficial anterior
+                const r = fusionar(local.canciones, snap, DATOS.canciones, conflictos);
+                canciones = r.lista; conflictos = r.conflictos; resumenFusion = r.resumen;
+                snap = snapDe(DATOS.canciones);
+                baseActual = DATOS.version;
+                dirty = JSON.stringify(sinVista(canciones)) !== JSON.stringify(sinVista(copia(DATOS.canciones)));
             }
-            // Si el archivo es más nuevo y no hay cambios pendientes, se usa el archivo.
+        } else {
+            snap = snapDe(DATOS.canciones);
         }
         persistirLocal();
     })();
 
-    let setIds = [];
-    try { setIds = (JSON.parse(localStorage.getItem(CLAVE_SET)) || []).filter(id => canciones.some(s => s.id === id)); } catch (e) {}
+    // ---------- Set de la semana (oficial): lo arma el administrador; cada persona puede tener su propia copia ----------
+    const CLAVE_SEMANAS = 'cancionero_semanas_v1';
+    const CLAVE_ADMIN_SETS = 'cancionero_admin_sets_v1';
+    let copiasSem = {}, obsoletasSem = {}, snapSets = null;
+    let semSel = null, semanaActual = [];
+
+    function persistirSemanas() {
+        try { localStorage.setItem(CLAVE_SEMANAS, JSON.stringify({ copias: copiasSem, obsoletas: obsoletasSem, snap: snapSets })); } catch (e) {}
+    }
+    (function cargarSets() {
+        // Sets oficiales: los del archivo, o los que el administrador editó y todavía no publicó
+        setsOficiales = copia(DATOS.sets || []);
+        try {
+            const a = JSON.parse(localStorage.getItem(CLAVE_ADMIN_SETS));
+            if (a && Array.isArray(a.sets) && a.base >= DATOS.version) setsOficiales = a.sets;
+        } catch (e) {}
+        let sm = {};
+        try { sm = JSON.parse(localStorage.getItem(CLAVE_SEMANAS)) || {}; } catch (e) {}
+        copiasSem = sm.copias || {}; obsoletasSem = sm.obsoletas || {}; snapSets = sm.snap || null;
+        const delArchivo = {};
+        (DATOS.sets || []).forEach(o => { delArchivo[o.id] = o; });
+        Object.keys(copiasSem).forEach(id => {
+            const existe = delArchivo[id] || setsOficiales.some(o => o.id === id);
+            if (!existe) { delete copiasSem[id]; delete obsoletasSem[id]; return; }
+            // Si el administrador cambió el set después de que la persona hizo su copia, se le avisa (su copia no se toca)
+            if (snapSets && snapSets[id] && delArchivo[id] && JSON.stringify(snapSets[id]) !== JSON.stringify(delArchivo[id].canciones)) obsoletasSem[id] = true;
+        });
+        snapSets = {};
+        (DATOS.sets || []).forEach(o => { snapSets[o.id] = copia(o.canciones || []); });
+        persistirSemanas();
+    })();
+
+    function hoyLocal() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function setsOrdenados() { return setsOficiales.slice().sort((a, b) => String(a.fecha).localeCompare(String(b.fecha))); }
+    function fmtFecha(f) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(f || '');
+        if (!m) return f || '';
+        try { return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, ''); }
+        catch (e) { return f; }
+    }
+    function setOficialActual() { return setsOficiales.find(o => o.id === semSel) || null; }
+    function elegirSemanaInicial() {
+        const l = setsOrdenados(); if (!l.length) return null;
+        const h = hoyLocal();
+        return (l.find(o => o.fecha >= h) || l[l.length - 1]).id;   // el más próximo a hoy; si ya pasaron todos, el último
+    }
+    const idsVigentes = ids => (ids || []).filter(id => songPorId(id));
+    function cargarSemanaActual() {
+        if (!setOficialActual()) semSel = elegirSemanaInicial();
+        const o = setOficialActual();
+        semanaActual = o ? idsVigentes(copiasSem[o.id] || o.canciones) : [];
+    }
+    function contarSemana() {
+        const o = setOficialActual() || setsOficiales.find(x => x.id === elegirSemanaInicial());
+        return o ? idsVigentes(copiasSem[o.id] || o.canciones).length : 0;
+    }
+    function guardarCopiaSemana() {
+        const o = setOficialActual(); if (!o) return;
+        if (JSON.stringify(semanaActual) === JSON.stringify(idsVigentes(o.canciones))) { delete copiasSem[o.id]; delete obsoletasSem[o.id]; }
+        else copiasSem[o.id] = semanaActual.slice();
+        persistirSemanas();
+        actualizarEstado();
+    }
+    // Una canción eliminada sale de todas las listas
+    function purgarId(id) {
+        misIds = misIds.filter(x => x !== id);
+        semanaActual = semanaActual.filter(x => x !== id);
+        Object.keys(copiasSem).forEach(k => { copiasSem[k] = copiasSem[k].filter(x => x !== id); });
+        persistirSemanas();
+        setIds = modoSet === 'sem' ? semanaActual : misIds;
+    }
+
+    function renderSemHead() {
+        const box = el('semHead'); if (!box) return;
+        if (modoSet !== 'sem') { box.innerHTML = ''; return; }
+        const o = setOficialActual();
+        if (!o) { box.innerHTML = '<div class="empty">Todavía no hay un set de la semana.</div>'; return; }
+        const mod = !!copiasSem[o.id];
+        box.innerHTML = `<div class="sem-head">
+            <select id="semSelect" onchange="elegirSemana(this.value)" aria-label="Elegir la fecha del set">${setsOrdenados().map(x => `<option value="${escapeHtml(x.id)}" ${x.id === o.id ? 'selected' : ''}>${escapeHtml(fmtFecha(x.fecha))} · ${escapeHtml(x.nombre || 'Set')}</option>`).join('')}</select>
+            <div class="fila"><button onclick="abrirPicker('semana')">＋ Agregar canción</button>${mod ? '<button onclick="restaurarSemana()">↺ Restaurar el oficial</button>' : ''}</div>
+            ${mod ? `<div class="aviso-sem">${obsoletasSem[o.id] ? '⚠ El administrador actualizó este set y tú tienes tu propia versión. Toca "Restaurar el oficial" para ver la nueva.' : 'Modificaste este set. Tu versión se queda solo en este teléfono.'}</div>` : ''}
+        </div>`;
+    }
+    function elegirSemana(id) {
+        semSel = id; cargarSemanaActual(); setIds = semanaActual;
+        cur = 0; curGuardado.sem = 0;
+        renderSet();
+    }
+    function restaurarSemana() {
+        const o = setOficialActual(); if (!o) return;
+        if (!confirm('Se descartan tus cambios y se vuelve al set que armó el administrador. ¿Continuar?')) return;
+        delete copiasSem[o.id]; delete obsoletasSem[o.id];
+        persistirSemanas();
+        cargarSemanaActual(); setIds = semanaActual;
+        cur = 0;
+        renderSet();
+        aviso('Set oficial restaurado');
+    }
+
+    // ---------- Selector de canciones (para el set de la semana y para el editor de sets oficiales) ----------
+    let pickerDestino = null;
+    function ov(id, on) {
+        el(id).classList.toggle('open', on);
+        document.body.classList.toggle('noscroll', !!document.querySelector('.editor.open, .escena.open'));
+    }
+    function listaPicker() { return pickerDestino === 'semana' ? semanaActual : (setEdTmp ? setEdTmp.canciones : []); }
+    function abrirPicker(destino) {
+        pickerDestino = destino;
+        el('pickBuscar').value = '';
+        renderPicker();
+        ov('picker', true);
+    }
+    function renderPicker() {
+        const q = el('pickBuscar').value.toLowerCase().trim();
+        const dentro = listaPicker();
+        const lista = canciones.filter(s => s.titulo.toLowerCase().includes(q))
+            .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es', { sensitivity: 'base', numeric: true }));
+        el('pickLista').innerHTML = lista.length ? lista.map(s => {
+            const p = partesTitulo(s.titulo), on = dentro.includes(s.id);
+            return `<div class="set-row pick ${on ? 'on' : ''}" onclick="alternarEnPicker(${s.id})"><span class="ck">${on ? '✓' : ''}</span><span class="nm">${escapeHtml(p.main)}<small>${escapeHtml([p.sub, fmtTono(s.tono)].filter(Boolean).join(' · '))}</small></span></div>`;
+        }).join('') : '<div class="empty">No hay canciones que coincidan.</div>';
+    }
+    function alternarEnPicker(id) {
+        const l = listaPicker(), i = l.indexOf(id);
+        if (i >= 0) l.splice(i, 1); else l.push(id);
+        if (pickerDestino === 'semana') guardarCopiaSemana();
+        renderPicker();
+    }
+    function cerrarPicker() {
+        ov('picker', false);
+        if (pickerDestino === 'semana') renderSet(); else renderSetEd();
+    }
+
+    let misIds = [];
+    try { misIds = (JSON.parse(localStorage.getItem(CLAVE_SET)) || []).filter(id => canciones.some(s => s.id === id)); } catch (e) {}
+    let setIds = misIds;              // lista activa: la de "Mi set" o la del set de la semana
+    let modoSet = 'mio';              // 'mio' | 'sem'
+    const curGuardado = { mio: 0, sem: 0 };
 
     let prefs = { tam: 17, ajuste: false, tema: 'oscuro' };
     try { prefs = Object.assign(prefs, JSON.parse(localStorage.getItem(CLAVE_PREFS)) || {}); } catch (e) {}
@@ -494,7 +888,7 @@
         return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
     function persistirLocal() {
-        try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ base: baseActual, dirty: dirty, canciones: canciones })); } catch (e) {}
+        try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ base: baseActual, dirty: dirty, canciones: canciones, snap: snap, conflictos: conflictos })); } catch (e) {}
     }
     // soloVista = true cuando el cambio no forma parte del archivo (por ejemplo el tono T+ / T−)
     function guardar(soloVista) {
@@ -533,6 +927,8 @@
     function marcarGuardado(version) {
         baseActual = version;
         dirty = false;
+        snap = snapDe(canciones);      // lo que acaba de guardarse en el archivo pasa a ser la versión oficial de este teléfono
+        conflictos = {};
         persistirLocal();
         actualizarEstadoArchivo();
     }
@@ -591,7 +987,7 @@
 
     // Genera el HTML completo con las canciones actuales dentro del bloque de datos
     function construirHtml() {
-        const datos = { version: Date.now(), canciones: sinVista(canciones) };
+        const datos = { version: Date.now(), canciones: sinVista(canciones), sets: setsOficiales };
         const json = JSON.stringify(datos, null, 1)
             .replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
         const re = /(<script id="datos-canciones"[^>]*>)[\s\S]*?(<\/script>)/;
@@ -617,7 +1013,10 @@
         marcarGuardado(r.version);
         if (!silencio) aviso('Listo: reemplaza tu archivo por el que se descargó (' + NOMBRE_ARCHIVO + ').', 6500);
     }
-    function guardarSet() { try { localStorage.setItem(CLAVE_SET, JSON.stringify(setIds)); } catch (e) {} }
+    function guardarSet() {
+        if (modoSet === 'sem') { guardarCopiaSemana(); return; }
+        try { localStorage.setItem(CLAVE_SET, JSON.stringify(misIds)); } catch (e) {}
+    }
     function songPorId(id) { return canciones.find(s => s.id === id); }
 
     let toastTimer;
@@ -629,6 +1028,8 @@
         toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2300);
     }
 
+    // Cómo se ve el tono en las listas: solo la primera letra en mayúscula (C#M → C#m, DM → Dm, SIM → Sim). El dato guardado no cambia.
+    function fmtTono(t) { t = String(t || '').trim(); return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : ''; }
     function partesTitulo(t) {
         const i = t.indexOf(' - ');
         return i < 0 ? { main: t, sub: '' } : { main: t.slice(0, i), sub: t.slice(i + 3) };
@@ -790,20 +1191,32 @@
     }
 
     // ---------- Navegación ----------
+    function esVistaSet() { return vista === 'set' || vista === 'sem'; }
     function irA(v) {
+        if (v === 'sem' && !setsOficiales.length) v = 'lib';
+        curGuardado[modoSet] = cur;
+        modoSet = v === 'sem' ? 'sem' : 'mio';
+        if (modoSet === 'sem') { cargarSemanaActual(); setIds = semanaActual; } else setIds = misIds;
+        cur = curGuardado[modoSet] || 0;
         vista = v;
         document.body.classList.toggle('lib', v === 'lib');
-        document.body.classList.toggle('set', v === 'set');
+        document.body.classList.toggle('set', v !== 'lib');
+        document.body.classList.toggle('sem', v === 'sem');
         el('viewLib').classList.toggle('on', v === 'lib');
-        el('viewSet').classList.toggle('on', v === 'set');
+        el('viewSet').classList.toggle('on', v !== 'lib');
         el('tabLib').classList.toggle('on', v === 'lib');
+        el('tabSem').classList.toggle('on', v === 'sem');
         el('tabSet').classList.toggle('on', v === 'set');
-        if (v === 'set') renderSet(); else renderLib();
+        if (v !== 'lib') renderSet(); else renderLib();
         window.scrollTo(0, 0);
     }
 
     function actualizarEstado() {
-        el('setCount').textContent = setIds.length;
+        el('setCount').textContent = misIds.length;
+        const haySem = setsOficiales.length > 0;
+        el('tabSem').style.display = haySem ? '' : 'none';
+        el('seg').classList.toggle('tres', haySem);
+        el('semCount').textContent = contarSemana();
         el('playN').textContent = '· ' + setIds.length;
         document.body.classList.toggle('hasset', setIds.length > 0);
     }
@@ -818,13 +1231,13 @@
             grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No hay canciones que mostrar.<br>Usa ＋ para agregar una.</div>';
         } else {
             grid.innerHTML = lista.map(s => {
-                const pos = setIds.indexOf(s.id);
+                const pos = misIds.indexOf(s.id);
                 const p = partesTitulo(s.titulo);
                 return `
                 <div class="tile ${pos >= 0 ? 'on' : ''}" onclick="alternarEnSet(${s.id})">
                     <span class="tick">${pos >= 0 ? pos + 1 : ''}</span>
                     <span class="tt txt">${escapeHtml(p.main)}${p.sub ? `<span class="sub">${escapeHtml(p.sub)}</span>` : ''}</span>
-                    <span class="key">${escapeHtml(s.tono || '—')}</span>
+                    <span class="key">${escapeHtml(fmtTono(s.tono) || '—')}</span>
                     <button class="mini" onclick="event.stopPropagation();abrirEditor(${s.id})" aria-label="Editar">✎</button>
                 </div>`;
             }).join('');
@@ -833,8 +1246,8 @@
     }
 
     function alternarEnSet(id) {
-        const i = setIds.indexOf(id);
-        if (i >= 0) setIds.splice(i, 1); else setIds.push(id);
+        const i = misIds.indexOf(id);
+        if (i >= 0) misIds.splice(i, 1); else misIds.push(id);
         guardarSet();
         renderLib();
     }
@@ -842,10 +1255,13 @@
     // ---------- Mi set ----------
     function renderSet() {
         actualizarEstado();
+        renderSemHead();
         const box = el('stageBox');
         if (setIds.length === 0) {
             el('chips').innerHTML = '';
-            box.innerHTML = `<div class="empty">Tu set está vacío.<br>Elige canciones en la Biblioteca.<br><button class="btn-acc" onclick="irA('lib')">Ir a la Biblioteca</button></div>`;
+            box.innerHTML = modoSet === 'sem'
+                ? `<div class="empty">Este set no tiene canciones.<br>Usa "＋ Agregar canción" para armar tu versión.</div>`
+                : `<div class="empty">Tu set está vacío.<br>Elige canciones en la Biblioteca.<br><button class="btn-acc" onclick="irA('lib')">Ir a la Biblioteca</button></div>`;
             return;
         }
         if (cur >= setIds.length) cur = setIds.length - 1;
@@ -874,7 +1290,6 @@
                     <button onclick="moverEnSet(1)" ${cur === setIds.length - 1 ? 'disabled' : ''}>Después ⇨</button>
                     <button class="rm" onclick="quitarActual()">Quitar</button>
                 </div>
-                <pre class="lyrics">${renderLetra(s.notas, t)}</pre>
                 <details class="notes" ${s.comentario ? 'open' : ''}>
                     <summary>📝 Notas</summary>
                     <div class="note-tools">
@@ -883,6 +1298,7 @@
                     </div>
                     <div class="note-ed" contenteditable="true" data-ph="Escribe una nota…" onpaste="pegarPlano(event)" oninput="notaInput(${s.id}, this)">${s.comentario || ''}</div>
                 </details>
+                <pre class="lyrics">${renderLetra(s.notas, t)}</pre>
             </article>`;
 
         el('pos').textContent = `${cur + 1}/${setIds.length}`;
@@ -1060,7 +1476,7 @@
         nuevas.forEach(c => canciones.push(c));
         cambiadas.forEach(c => { const i = canciones.findIndex(x => x.id === c.id); canciones[i] = Object.assign({}, canciones[i], c); });
         guardar();
-        if (vista === 'set') renderSet(); else renderLib();
+        if (esVistaSet()) renderSet(); else renderLib();
         aviso('Importadas: ' + nuevas.length + ' nuevas y ' + cambiadas.length + ' actualizadas', 5000);
     }
 
@@ -1085,7 +1501,7 @@
         el('escena').classList.remove('open');
         document.body.classList.remove('noscroll');
         try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); } catch (e) {}
-        if (vista === 'set') renderSet(); else renderLib();
+        if (esVistaSet()) renderSet(); else renderLib();
     }
 
     function renderEscena() {
@@ -1153,6 +1569,7 @@
         ponerEstado(editor.base);
         el('edHead').textContent = s ? 'Editar canción' : 'Nueva canción';
         el('btnEliminar').style.display = s ? 'block' : 'none';
+        el('btnOficial').style.display = (s && conflictos[s.id]) ? 'block' : 'none';
         el('btnRedo').disabled = true;
         el('hlPal').classList.remove('open');
         el('editor').classList.add('open');
@@ -1315,9 +1732,10 @@
             // Una canción nueva se suma a Mi set y se abre ahí, con acordes en color y botones T+ / T−
             const id = Date.now();
             canciones.push({ id, titulo, tono, comentario: '', notas });
-            setIds.push(id);
-            cur = setIds.length - 1;
-            guardar(); guardarSet();
+            misIds.push(id);
+            if (modoSet === 'sem') curGuardado.mio = misIds.length - 1; else cur = misIds.length - 1;
+            guardar();
+            try { localStorage.setItem(CLAVE_SET, JSON.stringify(misIds)); } catch (e) {}
             cerrarEditor();
             irA('set');
             aviso('Canción agregada a tu set');
@@ -1329,25 +1747,370 @@
         aviso('✔ Guardado');
         guardar();
         cerrarEditor();
-        if (vista === 'set') renderSet(); else renderLib();
+        if (esVistaSet()) renderSet(); else renderLib();
     }
 
+    // Reemplaza solo los datos en conflicto por los de la versión oficial más reciente
+    function restaurarOficial() {
+        const s = songPorId(editor.id);
+        const c = s && conflictos[s.id];
+        if (!c) return;
+        const nombres = { titulo: 'el título', tono: 'el tono', comentario: 'tus notas', notas: 'la letra y los acordes (se pierden tus comentarios y resaltados dentro de la letra)' };
+        const que = c.campos.map(k => nombres[k] || k).join(', ');
+        if (!confirm('Se reemplazará con la versión oficial: ' + que + '.\n\nLo demás de esta canción se queda como lo tienes. ¿Continuar?')) return;
+        c.campos.forEach(k => { s[k] = valorCampo(c.oficial, k); });
+        delete conflictos[s.id];
+        guardar();
+        cerrarEditor();
+        aviso('Versión oficial aplicada');
+        if (esVistaSet()) renderSet(); else renderLib();
+    }
     function eliminarDesdeEditor() {
         const s = songPorId(editor.id);
         if (!s) return;
         if (!confirm(`¿Eliminar "${s.titulo}"?`)) return;
         canciones = canciones.filter(x => x.id !== s.id);
-        setIds = setIds.filter(id => id !== s.id);
+        delete conflictos[s.id];
+        purgarId(s.id);
         guardar(); guardarSet();
         cerrarEditor();
         aviso('Canción eliminada');
-        if (vista === 'set') renderSet(); else renderLib();
+        if (esVistaSet()) renderSet(); else renderLib();
     }
 
     // ---------- Inicio ----------
     aplicarPrefs();
     renderLib();
     actualizarEstadoArchivo();
+
+    // ---------- Editor de sets oficiales (administrador) ----------
+    let setEdTmp = null;
+    function persistirAdminSets() {
+        try { localStorage.setItem(CLAVE_ADMIN_SETS, JSON.stringify({ base: baseActual, sets: setsOficiales })); } catch (e) {}
+        guardar();
+    }
+    function abrirSetEd(id, desdeMiSet) {
+        const o = id ? setsOficiales.find(x => x.id === id) : null;
+        setEdTmp = o ? copia(o) : { id: null, nombre: '', fecha: hoyLocal(), canciones: desdeMiSet ? misIds.slice() : [] };
+        setEdTmp.canciones = (setEdTmp.canciones || []).slice();
+        el('setEdHead').textContent = o ? 'Editar set oficial' : 'Nuevo set oficial';
+        el('setNombre').value = setEdTmp.nombre || '';
+        el('setFecha').value = setEdTmp.fecha || '';
+        el('btnSetEliminar').style.display = o ? 'block' : 'none';
+        renderSetEd();
+        ov('setEd', true);
+    }
+    function renderSetEd() {
+        if (!setEdTmp) return;
+        const l = setEdTmp.canciones;
+        el('setEdLista').innerHTML = l.length ? l.map((id, i) => {
+            const s = songPorId(id);
+            if (!s) return '';
+            const p = partesTitulo(s.titulo);
+            return `<div class="set-row"><span class="nm">${i + 1}. ${escapeHtml(p.main)}<small>${escapeHtml([p.sub, fmtTono(s.tono)].filter(Boolean).join(' · '))}</small></span>
+                <button onclick="moverEnSetEd(${i}, -1)" ${i === 0 ? 'disabled' : ''} aria-label="Subir">↑</button>
+                <button onclick="moverEnSetEd(${i}, 1)" ${i === l.length - 1 ? 'disabled' : ''} aria-label="Bajar">↓</button>
+                <button class="rojo" onclick="quitarDeSetEd(${i})" aria-label="Quitar">✕</button></div>`;
+        }).join('') : '<div class="hint" style="margin:0">Sin canciones todavía.</div>';
+    }
+    function moverEnSetEd(i, d) {
+        const l = setEdTmp.canciones, n = i + d;
+        if (n < 0 || n >= l.length) return;
+        [l[i], l[n]] = [l[n], l[i]];
+        renderSetEd();
+    }
+    function quitarDeSetEd(i) { setEdTmp.canciones.splice(i, 1); renderSetEd(); }
+    function cerrarSetEd() { ov('setEd', false); }
+    function guardarSetEd() {
+        const fecha = el('setFecha').value;
+        if (!fecha) { aviso('Elige la fecha en que se tocará'); return; }
+        setEdTmp.nombre = el('setNombre').value.trim() || 'Set';
+        setEdTmp.fecha = fecha;
+        setEdTmp.canciones = idsVigentes(setEdTmp.canciones);
+        if (!setEdTmp.id) { setEdTmp.id = 's' + Date.now().toString(36); setsOficiales.push(copia(setEdTmp)); }
+        else setsOficiales = setsOficiales.map(o => o.id === setEdTmp.id ? copia(setEdTmp) : o);
+        semSel = setEdTmp.id;
+        persistirAdminSets();
+        cerrarSetEd();
+        renderPanelAdmin();
+        aviso('✔ Set guardado. Falta publicar para que lo vean todos.', 4500);
+    }
+    function eliminarSetEd() {
+        if (!setEdTmp || !setEdTmp.id) return;
+        if (!confirm('¿Eliminar este set oficial para todos? (Falta publicar para que se aplique.)')) return;
+        setsOficiales = setsOficiales.filter(o => o.id !== setEdTmp.id);
+        if (semSel === setEdTmp.id) semSel = null;
+        persistirAdminSets();
+        cerrarSetEd();
+        renderPanelAdmin();
+    }
+
+    // ---------- Modo administrador: acceso con contraseña y publicación en GitHub ----------
+    const CLAVE_ADMIN = 'cancionero_admin_v1';
+    const API_GITHUB = 'https://api.github.com';
+    let adminActivo = false, tokenGH = '', passAdmin = '', modoCfg = 'nuevo', publicando = false, reintentarPublicar = false;
+    let tapsMarca = 0, tapsT = 0;
+    const enc = new TextEncoder(), dec = new TextDecoder();
+
+    function cfgAdmin() { try { return JSON.parse(localStorage.getItem(CLAVE_ADMIN)); } catch (e) { return null; } }
+    function b64(buf) {
+        const u = new Uint8Array(buf); let t = '';
+        for (let i = 0; i < u.length; i += 0x8000) t += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+        return btoa(t);
+    }
+    const deb64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+    async function claveDe(pass, salt) {
+        const km = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
+        return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    }
+    async function cifrarToken(pass, token) {
+        const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+        const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await claveDe(pass, salt), enc.encode(token));
+        return { salt: b64(salt), iv: b64(iv), ct: b64(ct) };
+    }
+    async function descifrarToken(pass, cfg) {
+        try {
+            const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: deb64(cfg.iv) }, await claveDe(pass, deb64(cfg.salt)), deb64(cfg.ct));
+            return dec.decode(pt);
+        } catch (e) { return null; }
+    }
+    function repoPorDefecto() {
+        let owner = '', repo = '';
+        if (/\.github\.io$/i.test(location.hostname)) {
+            owner = location.hostname.split('.')[0];
+            repo = location.pathname.split('/').filter(Boolean)[0] || (owner + '.github.io');
+            if (/\.html?$/i.test(repo)) repo = owner + '.github.io';
+        }
+        return { owner, repo, path: NOMBRE_ARCHIVO, branch: 'main' };
+    }
+    function diasPara(f) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(f || '');
+        if (!m) return null;
+        return Math.ceil((new Date(+m[1], +m[2] - 1, +m[3], 23, 59).getTime() - Date.now()) / 86400000);
+    }
+
+    // Gesto escondido: 7 toques seguidos en el título
+    function tocarMarca() {
+        clearTimeout(tapsT); tapsMarca++;
+        tapsT = setTimeout(() => { tapsMarca = 0; }, 2500);
+        if (tapsMarca >= 7) {
+            tapsMarca = 0;
+            if (cfgAdmin()) mostrarEntrada(); else abrirCfgAdmin('nuevo');
+        }
+    }
+
+    function mostrarEntrada() {
+        el('entradaElegir').style.display = 'flex';
+        el('entradaClave').style.display = 'none';
+        el('entClave').value = ''; el('entErr').textContent = '';
+        el('entrada').classList.add('open');
+    }
+    function entrarUsuario() { salirAdmin(); el('entrada').classList.remove('open'); }
+    function entrarAdmin() {
+        el('entradaElegir').style.display = 'none';
+        el('entradaClave').style.display = 'flex';
+        setTimeout(() => el('entClave').focus(), 100);
+    }
+    async function confirmarClave() {
+        const cfg = cfgAdmin();
+        if (!cfg) { mostrarEntrada(); return; }
+        const pass = el('entClave').value;
+        if (!pass) return;
+        el('entErr').textContent = 'Comprobando…';
+        const t = await descifrarToken(pass, cfg);
+        if (t === null) {
+            el('entErr').textContent = (window.crypto && crypto.subtle) ? 'Contraseña incorrecta' : 'Este navegador no permite cifrar aquí. Abre la app desde su dirección https.';
+            return;
+        }
+        tokenGH = t; passAdmin = pass;
+        entrarComoAdmin();
+    }
+    function entrarComoAdmin() {
+        adminActivo = true;
+        document.body.classList.add('admin');
+        el('entrada').classList.remove('open');
+        const cfg = cfgAdmin(), d = cfg && diasPara(cfg.venc);
+        if (d !== null && d !== undefined) {
+            if (d < 0) aviso('Tu token de GitHub ya venció. Genera uno nuevo en ⚙ → Cambiar el token.', 7000);
+            else if (d <= 14) aviso('Tu token de GitHub vence en ' + d + (d === 1 ? ' día' : ' días') + '. Conviene generar uno nuevo.', 7000);
+        }
+    }
+    function salirAdmin() {
+        adminActivo = false; tokenGH = ''; passAdmin = '';
+        document.body.classList.remove('admin');
+        ['panelAdmin', 'setEd', 'cfgAdmin', 'picker'].forEach(id => ov(id, false));
+        if (esVistaSet() || vista === 'lib') irA(vista);
+    }
+    function quitarAdmin() {
+        if (!confirm('Se quita el modo administrador y el token guardado en ESTE teléfono. Podrás volver a configurarlo con el gesto de 7 toques. ¿Continuar?')) return;
+        try { localStorage.removeItem(CLAVE_ADMIN); } catch (e) {}
+        el('entrada').classList.remove('open');
+        salirAdmin();
+        aviso('Modo administrador quitado de este teléfono');
+    }
+
+    function abrirPanelAdmin() { if (!adminActivo) return; renderPanelAdmin(); ov('panelAdmin', true); }
+    function cerrarPanelAdmin() { ov('panelAdmin', false); irA(vista); }
+    function renderPanelAdmin() {
+        const cfg = cfgAdmin() || {};
+        const e = el('admEstado');
+        e.className = 'hint estado ' + (dirty ? 'pend' : 'ok');
+        e.textContent = dirty ? 'Hay cambios sin publicar (canciones o sets).' : '✔ Todo lo que ves ya está publicado.';
+        const l = setsOrdenados().reverse();
+        el('admSets').innerHTML = l.length ? l.map(o => `<div class="set-row"><span class="nm">${escapeHtml(o.nombre || 'Set')}<small>${escapeHtml(fmtFecha(o.fecha))} · ${idsVigentes(o.canciones).length} canciones</small></span><button onclick="abrirSetEd('${escapeHtml(o.id)}')" aria-label="Editar">✎</button></div>`).join('')
+            : '<div class="hint" style="margin:0 0 8px">Todavía no hay sets oficiales.</div>';
+        const d = diasPara(cfg.venc);
+        el('admRepo').textContent = (cfg.owner || '?') + '/' + (cfg.repo || '?') + ' · rama ' + (cfg.branch || '?') + ' · ' + (cfg.path || '?') + (cfg.venc ? ' · token vence el ' + cfg.venc + (d !== null && d < 0 ? ' (VENCIDO)' : '') : '');
+    }
+
+    // Pantalla para configurar al administrador o cambiar el token
+    function abrirCfgAdmin(modo) {
+        modoCfg = modo;
+        const cfg = cfgAdmin() || {}, def = repoPorDefecto();
+        const nuevo = modo === 'nuevo';
+        el('cfgHead').textContent = nuevo ? 'Configurar administrador' : 'Cambiar el token';
+        el('cfgAyuda').textContent = nuevo
+            ? 'Elige una contraseña y pega tu token de GitHub (con permiso Contents: Read and write solo para este repositorio). El token se guarda cifrado con tu contraseña, solo en este teléfono.'
+            : 'Pega el token nuevo. Se guarda cifrado con tu misma contraseña.';
+        el('cfgClaveBox').style.display = nuevo ? '' : 'none';
+        el('cfgRepoBox').style.display = nuevo ? '' : 'none';
+        el('cfgClave').value = ''; el('cfgClave2').value = ''; el('cfgToken').value = '';
+        el('cfgVenc').value = '';
+        el('cfgOwner').value = cfg.owner || def.owner; el('cfgRepo').value = cfg.repo || def.repo;
+        el('cfgPath').value = cfg.path || def.path; el('cfgBranch').value = cfg.branch || def.branch;
+        ov('cfgAdmin', true);
+    }
+    function cerrarCfgAdmin() { ov('cfgAdmin', false); reintentarPublicar = false; }
+    async function probarToken(token, c) {
+        try {
+            const r = await fetch(`${API_GITHUB}/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}/contents/${c.path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(c.branch)}`,
+                { headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }, cache: 'no-store' });
+            if (r.ok) return 'ok';
+            if (r.status === 401) return 'invalido';
+            if (r.status === 404) return 'norepo';
+            return 'otro';
+        } catch (e) { return 'red'; }
+    }
+    async function guardarCfgAdmin() {
+        const nuevo = modoCfg === 'nuevo';
+        const token = el('cfgToken').value.trim();
+        if (!(window.crypto && crypto.subtle)) { aviso('Este navegador no permite cifrar aquí. Abre la app desde su dirección https.', 6000); return; }
+        let pass = passAdmin;
+        if (nuevo) {
+            pass = el('cfgClave').value;
+            if (pass.length < 6) { aviso('La contraseña debe tener al menos 6 caracteres', 4000); return; }
+            if (pass !== el('cfgClave2').value) { aviso('Las contraseñas no coinciden', 4000); return; }
+        }
+        if (!token) { aviso('Pega el token de GitHub', 4000); return; }
+        const previo = cfgAdmin() || {};
+        const c = nuevo
+            ? { owner: el('cfgOwner').value.trim(), repo: el('cfgRepo').value.trim(), path: el('cfgPath').value.trim() || 'index.html', branch: el('cfgBranch').value.trim() || 'main' }
+            : { owner: previo.owner, repo: previo.repo, path: previo.path, branch: previo.branch };
+        if (!c.owner || !c.repo) { aviso('Escribe el usuario y el repositorio de GitHub', 4000); return; }
+        el('btnCfgGuardar').disabled = true;
+        try {
+            const est = await probarToken(token, c);
+            if (est === 'invalido') { aviso('GitHub no aceptó ese token. Revisa que lo copiaste completo y que no esté vencido.', 6000); return; }
+            if (est === 'norepo') { aviso('No encuentro ese repositorio, rama o archivo, o el token no tiene acceso a él.', 6000); return; }
+            if (est === 'red' && !confirm('No pude comprobar el token (sin internet). ¿Guardarlo de todos modos?')) return;
+            const cif = await cifrarToken(pass, token);
+            try { localStorage.setItem(CLAVE_ADMIN, JSON.stringify(Object.assign({}, c, cif, { v: 1, venc: el('cfgVenc').value || '' }))); }
+            catch (e) { aviso('No se pudo guardar en este teléfono', 4000); return; }
+            tokenGH = token; passAdmin = pass;
+            const volver = reintentarPublicar; reintentarPublicar = false;
+            ov('cfgAdmin', false);
+            if (!adminActivo) entrarComoAdmin();
+            if (el('panelAdmin').classList.contains('open')) renderPanelAdmin();
+            aviso('✔ Listo', 2500);
+            if (volver) publicarEnGitHub(true);
+        } finally { el('btnCfgGuardar').disabled = false; }
+    }
+    function tokenInvalido() {
+        aviso('Tu token de GitHub venció o ya no es válido. Pega uno nuevo.', 6000);
+        reintentarPublicar = true;
+        abrirCfgAdmin('token');
+    }
+
+    // Publica este index.html en el repositorio: es lo que descargan los usuarios
+    async function publicarEnGitHub(sinPreguntar) {
+        if (!adminActivo || !tokenGH) { aviso('Entra como administrador para publicar'); return; }
+        if (publicando) return;
+        const cfg = cfgAdmin(); if (!cfg) return;
+        const r = construirHtml();
+        if (!r) { aviso('No se pudo preparar el archivo', 4000); return; }
+        if (!sinPreguntar && !confirm('Se publicará para TODOS los usuarios lo que ves en este teléfono: canciones, notas y sets oficiales.\n\n¿Publicar ahora?')) return;
+        publicando = true;
+        const btn = el('btnPublicar'); btn.disabled = true; btn.textContent = 'Publicando…';
+        try {
+            const url = `${API_GITHUB}/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${cfg.path.split('/').map(encodeURIComponent).join('/')}`;
+            const cab = { 'Authorization': 'Bearer ' + tokenGH, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+            const contenido = b64(enc.encode(r.html));
+            let res = null;
+            for (let intento = 0; intento < 2; intento++) {
+                const g = await fetch(url + '?ref=' + encodeURIComponent(cfg.branch), { headers: cab, cache: 'no-store' });
+                if (g.status === 401) { tokenInvalido(); return; }
+                const sha = g.ok ? (await g.json()).sha : undefined;
+                res = await fetch(url, { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, cab),
+                    body: JSON.stringify({ message: 'Actualización del cancionero desde la app', content: contenido, sha: sha, branch: cfg.branch }) });
+                if ((res.status === 409 || res.status === 422) && intento === 0) continue;   // el archivo cambió mientras tanto: se pide de nuevo
+                break;
+            }
+            if (res.status === 401) { tokenInvalido(); return; }
+            if (res.status === 403) { aviso('GitHub no dejó escribir. Revisa que el token tenga el permiso Contents: Read and write para este repositorio.', 8000); return; }
+            if (res.status === 404) { aviso('No encuentro el repositorio, la rama o el archivo, o el token no tiene acceso. Revisa la conexión en ⚙.', 8000); return; }
+            if (!res.ok) { aviso('GitHub respondió con un error (' + res.status + '). Intenta de nuevo.', 6000); return; }
+            try { localStorage.removeItem(CLAVE_ADMIN_SETS); } catch (e) {}
+            marcarGuardado(r.version);
+            renderPanelAdmin();
+            aviso('✔ Publicado. Los usuarios lo verán en 1 o 2 minutos.', 8000);
+        } catch (e) {
+            aviso('No pude conectar con GitHub. Revisa tu internet e intenta de nuevo.', 6000);
+        } finally {
+            publicando = false; btn.disabled = false; btn.textContent = '⬆ Publicar';
+        }
+    }
+
+    // Resumen de la última fusión con el archivo oficial
+    if (resumenFusion && (resumenFusion.nuevas || resumenFusion.actualizadas || resumenFusion.conflictos)) {
+        const partes = [];
+        if (resumenFusion.nuevas) partes.push(resumenFusion.nuevas + (resumenFusion.nuevas === 1 ? ' canción nueva' : ' canciones nuevas'));
+        if (resumenFusion.actualizadas) partes.push(resumenFusion.actualizadas + (resumenFusion.actualizadas === 1 ? ' actualizada' : ' actualizadas'));
+        if (resumenFusion.conflictos) partes.push(resumenFusion.conflictos + (resumenFusion.conflictos === 1 ? ' con cambios distintos (se conservó la tuya; abre ✎ para usar la oficial)' : ' con cambios distintos (se conservaron las tuyas; abre ✎ para usar la oficial)'));
+        setTimeout(() => aviso('Actualización: ' + partes.join(' · '), 7000), 700);
+    }
+
+    // Actualización automática: al abrir la app o volver a ella, revisa si hay un index.html nuevo y, si lo hay, se recarga sola.
+    // Tus cambios locales se guardan antes de recargar; las canciones nuevas se fusionan sin pisar lo que personalizaste.
+    // En modo administrador no se recarga sola (para no perder la sesión mientras trabajas).
+    if (EN_LINEA) {
+        const CLAVE_ETAG = 'cancionero_firma_v1';
+        let revisando = false, ultima = 0;
+        async function buscarActualizacion() {
+            if (revisando || Date.now() - ultima < 15000) return;      // como máximo una revisión cada 15 s
+            if (!navigator.onLine) return;
+            revisando = true; ultima = Date.now();
+            try {
+                const r = await fetch(location.pathname, { method: 'HEAD', cache: 'no-store' });
+                const firma = r.ok ? (r.headers.get('etag') || r.headers.get('last-modified') || '') : '';
+                if (!firma) return;
+                let guardada = null;
+                try { guardada = localStorage.getItem(CLAVE_ETAG); } catch (e) {}
+                try { localStorage.setItem(CLAVE_ETAG, firma); } catch (e) { return; }
+                if (guardada && guardada !== firma) {
+                    const ocupado = adminActivo || el('entrada').classList.contains('open') || document.querySelector('.editor.open, .escena.open');
+                    if (ocupado) { try { localStorage.setItem(CLAVE_ETAG, guardada); } catch (e) {} return; }   // se aplicará en la próxima revisión
+                    aviso('Actualizando a la versión nueva…', 1500);
+                    setTimeout(() => location.reload(), 600);
+                }
+            } catch (e) {} finally { revisando = false; }
+        }
+        window.addEventListener('load', buscarActualizacion);
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') buscarActualizacion(); });
+        window.addEventListener('online', buscarActualizacion);
+    }
+
+    // Si este teléfono es de administrador, al abrir la app se elige cómo entrar
+    if (cfgAdmin()) mostrarEntrada();
 
     // Funciona sin internet cuando está publicado: el service worker guarda una copia de la app
     if ('serviceWorker' in navigator && EN_LINEA) {
