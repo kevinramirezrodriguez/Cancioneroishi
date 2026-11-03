@@ -154,6 +154,10 @@
         details.notes summary::-webkit-details-marker { display: none; }
         .note-tools { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
         .note-tools small { color: var(--mut); font-size: 12px; }
+        .note-tools { flex-wrap: wrap; }
+        .note-tools .nsw { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--line); padding: 0; flex: none; }
+        .note-tools .nq { min-height: 32px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); color: var(--tx); padding: 0 10px; font-weight: 700; font-size: 12px; }
+        .note-ed mark.hl, .note-ed mark.hl b, .note-ed mark.hl strong { color: #1d1400; border-radius: 3px; }
         .note-ed { min-height: 60px; padding: 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); font-size: 16px; outline: none; white-space: pre-wrap; }
         .note-ed:focus { border-color: var(--acc); }
         .note-ed:empty::before { content: attr(data-ph); color: var(--mut); }
@@ -223,6 +227,7 @@
         .entrada .err { color: var(--coral); font-weight: 700; min-height: 20px; text-align: center; }
         .entrada .chico { background: none; border: none; color: var(--mut); text-decoration: underline; font-size: 13px; padding: 8px; }
         .btn-html .dot { display: none; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); border: 2px solid var(--bg); }
+        #btnHtml:not(.btn-tema) { background: transparent; border-color: var(--line); color: var(--mut); font-weight: 600; font-size: 12px; padding: 0 10px; }
         .estado { margin: -4px 4px 12px; font-weight: 700; }
         .estado.ok { color: var(--ok); }
         .estado.pend { color: var(--acc-ink); }
@@ -506,7 +511,7 @@
 <!-- DATOS: las canciones viven aquí, dentro del archivo. El botón "⬇ HTML" de la app reescribe este bloque con tus canciones actuales. -->
 <script id="datos-canciones" type="application/json">
 {
- "version": 1793655055269,
+ "version": 1793684556841,
  "canciones": [
   {
    "id": 1,
@@ -632,12 +637,17 @@
     const CLAVE_PREFS = 'cancionero_prefs_v2';
 
     const el = id => document.getElementById(id);
+    const RE_HL = /\{\{([1-6]):/y;   // marca de resaltado: {{1:texto}}
 
     const DATOS = (function () {
         try { return JSON.parse(el('datos-canciones').textContent); } catch (e) { return { version: 0, canciones: [] }; }
     })();
     const sinVista = lista => lista.map(s => { const c = Object.assign({}, s); delete c.trans; return c; });
+    // Sin las notas personales (apartado 📝 Notas): lo que se publica para todos nunca las lleva
+    const sinNotas = lista => sinVista(lista).map(c => { c.comentario = ''; return c; });
     const copia = x => JSON.parse(JSON.stringify(x));
+    // Un archivo publicado no trae notas de nadie. Solo un respaldo personal (⬇ HTML / Guardar) las conserva.
+    if (!DATOS.privado && Array.isArray(DATOS.canciones)) DATOS.canciones.forEach(c => { c.comentario = ''; });
 
     let canciones = copia(DATOS.canciones);
     let baseActual = DATOS.version;   // versión del archivo sobre la que se está trabajando
@@ -648,7 +658,7 @@
     let setsOficiales = [];           // sets oficiales (los arma el administrador): [{ id, nombre, fecha, canciones: [ids] }]
 
     // ---------- Fusión: una versión nueva del archivo no pisa lo que cada persona personalizó ----------
-    const CAMPOS = ['titulo', 'tono', 'comentario', 'notas'];
+    const CAMPOS = ['titulo', 'tono', 'notas'];   // las notas personales (comentario) nunca se mezclan ni se pisan
     const valorCampo = (c, k) => (c && typeof c[k] === 'string') ? c[k] : '';
     function snapDe(lista) { const m = {}; sinVista(lista).forEach(c => { m[c.id] = c; }); return m; }
 
@@ -671,6 +681,63 @@
         }
         i = n; j = m; cerrar();
         return out;
+    }
+
+    // Texto de una línea sin marcas de formato
+    function planoDe(l) { return parsearLinea(l).chars.map(x => x.c).join(''); }
+    // Toma la línea oficial y le vuelve a poner los resaltados / negritas que la persona agregó o quitó sobre la línea base.
+    // Devuelve null si algún trozo ya no existe en la línea oficial (entonces no se puede reponer).
+    function conEstilosDe(oficial, base, mia) {
+        const pb = parsearLinea(base).chars, pm = parsearLinea(mia).chars, res = parsearLinea(oficial).chars.map(x => Object.assign({}, x));
+        const sb = pb.map(x => x.c).join(''), so = res.map(x => x.c).join('');
+        const dif = k => pm[k].b !== pb[k].b || pm[k].h !== pb[k].h;
+        for (let i = 0; i < pm.length;) {
+            if (!dif(i)) { i++; continue; }
+            let j = i;
+            while (j < pm.length && dif(j) && pm[j].b === pm[i].b && pm[j].h === pm[i].h) j++;
+            let donde = -1;
+            if (so === sb) donde = i;
+            else {
+                const trozo = sb.slice(i, j);
+                // la aparición del trozo más cercana a su posición original
+                for (let p = so.indexOf(trozo); p >= 0; p = so.indexOf(trozo, p + 1)) { if (donde < 0 || Math.abs(p - i) < Math.abs(donde - i)) donde = p; }
+            }
+            if (donde < 0) return null;
+            for (let k = 0; k < j - i; k++) { res[donde + k].b = pm[i + k].b; res[donde + k].h = pm[i + k].h; }
+            i = j;
+        }
+        return serializarLinea(res).texto;
+    }
+    // ¿La línea oficial se parece a la línea base? (al menos la mitad de sus palabras)
+    function seParece(base, otra) {
+        const pal = t => planoDe(t).toLowerCase().replace(/[^\p{L}\p{N}#]+/gu, ' ').split(' ').filter(Boolean);
+        const a = pal(base), b = new Set(pal(otra));
+        return a.length > 0 && a.filter(w => b.has(w)).length / a.length >= 0.5;
+    }
+    // Zona donde la persona solo cambió formato (resaltados, negritas) y el administrador cambió texto: se queda el texto oficial con el formato de la persona
+    function reponerEstilos(baseReg, miReg, ofReg) {
+        if (miReg.length !== baseReg.length) return null;
+        if (!miReg.every((l, k) => planoDe(l) === planoDe(baseReg[k]))) return null;   // la persona también cambió texto: no se puede
+        const rc = ofReg.slice();
+        for (let k = 0; k < miReg.length; k++) {
+            if (miReg[k] === baseReg[k]) continue;
+            let idx = -1, t = null;
+            if (ofReg.length === baseReg.length) {
+                if (seParece(baseReg[k], ofReg[k])) { t = conEstilosDe(ofReg[k], baseReg[k], miReg[k]); idx = k; }
+            } else {
+                // el administrador agregó o quitó líneas: se busca la línea oficial que corresponde a la de la persona
+                let mejor = 1e9;
+                ofReg.forEach((lo, i) => {
+                    if (!seParece(baseReg[k], lo)) return;
+                    const c = conEstilosDe(lo, baseReg[k], miReg[k]);
+                    const d = Math.abs(planoDe(lo).length - planoDe(baseReg[k]).length);
+                    if (c !== null && d < mejor) { mejor = d; idx = i; t = c; }
+                });
+            }
+            if (t === null || idx < 0) return null;
+            rc[idx] = t;
+        }
+        return rc;
     }
 
     // Mezcla tres versiones de una letra: la oficial anterior (base), la de la persona (mia) y la oficial nueva (nueva).
@@ -701,8 +768,12 @@
                 }
                 for (; pos < ini; pos++) out.push(B[pos]);
                 const ra = aplicar(ini, fin, ca), rb = aplicar(ini, fin, cb);
-                if (JSON.stringify(ra) !== JSON.stringify(rb)) choques++;
-                out.push(...ra);                      // ante un choque gana la versión de la persona
+                if (JSON.stringify(ra) === JSON.stringify(rb)) { out.push(...ra); }
+                else {
+                    const rc = reponerEstilos(B.slice(ini, fin), ra, rb);     // ¿la persona solo resaltó o puso negritas?
+                    if (rc) out.push(...rc);                                  // sí: texto oficial + sus resaltados
+                    else { choques++; out.push(...ra); }                      // no: gana la versión de la persona
+                }
                 pos = fin;
             } else {
                 const tomaA = a && (!b || a.bs <= b.bs);
@@ -729,7 +800,7 @@
                 if (b) return;                       // la persona la eliminó: se respeta
                 lista.push(copia(o)); nuevas++; return;
             }
-            const m = Object.assign({}, l);          // conserva todo lo suyo (incluido el tono transpuesto)
+            const m = Object.assign({}, l);          // conserva todo lo suyo (incluidas sus notas y el tono transpuesto)
             let cambio = false;
             const choques = new Set(((conflictosPrevios && conflictosPrevios[o.id]) || {}).campos || []);
             CAMPOS.forEach(k => {
@@ -763,7 +834,7 @@
             try {
                 const viejo = JSON.parse(localStorage.getItem(CLAVE_ANTERIOR));
                 if (Array.isArray(viejo) && viejo.length) {
-                    local = { base: DATOS.version, canciones: viejo, dirty: JSON.stringify(sinVista(viejo)) !== JSON.stringify(DATOS.canciones) };
+                    local = { base: DATOS.version, canciones: viejo, dirty: JSON.stringify(sinNotas(viejo)) !== JSON.stringify(sinNotas(DATOS.canciones)) };
                 }
             } catch (e) {}
         }
@@ -781,7 +852,7 @@
                 canciones = r.lista; conflictos = r.conflictos; resumenFusion = r.resumen;
                 snap = snapDe(DATOS.canciones);
                 baseActual = DATOS.version;
-                dirty = JSON.stringify(sinVista(canciones)) !== JSON.stringify(sinVista(copia(DATOS.canciones)));
+                dirty = JSON.stringify(sinNotas(canciones)) !== JSON.stringify(sinNotas(copia(DATOS.canciones)));
             }
         } else {
             snap = snapDe(DATOS.canciones);
@@ -965,26 +1036,24 @@
     let archivoNombre = '';
 
     function actualizarEstadoArchivo() {
+        // Todo se guarda solo en el dispositivo; Guardar es un respaldo opcional, así que ya no hay leyenda ni puntito de aviso.
         const e = el('estadoArchivo');
-        if (e) {
-            e.className = 'hint estado ' + (dirty ? 'pend' : 'ok');
-            e.textContent = dirty
-                ? (EN_LINEA
-                    ? '● Hay cambios que solo están en este dispositivo. Para publicarlos toca ' + ETIQUETA_GUARDAR + ' (arriba) y sube el archivo ' + NOMBRE_ARCHIVO + ' a tu sitio.'
-                    : '● Hay cambios que solo están en este navegador. Toca ' + ETIQUETA_GUARDAR + ' (arriba) para guardarlos en el archivo.')
-                : '✔ Todo está guardado en el archivo HTML' + (archivoNombre ? ' (' + archivoNombre + ')' : '') + '.';
-        }
+        if (e) { e.textContent = ''; e.style.display = 'none'; }
         const d = el('dotHtml');
-        if (d) d.style.display = dirty ? 'inline-block' : 'none';
+        if (d) d.style.display = 'none';
         const b = el('txtGuardar');
         if (b) b.textContent = ETIQUETA_GUARDAR;
     }
 
-    function marcarGuardado(version) {
-        baseActual = version;
+    // publicado = true solo cuando el administrador sube la versión a GitHub. Descargar o guardar una copia (⬇ HTML / Guardar)
+    // es un respaldo personal: NO cambia cuál es la versión oficial, para que una actualización posterior no pise esos cambios.
+    function marcarGuardado(version, publicado) {
         dirty = false;
-        snap = snapDe(canciones);      // lo que acaba de guardarse en el archivo pasa a ser la versión oficial de este teléfono
-        conflictos = {};
+        if (publicado) {
+            baseActual = version;
+            snap = snapDe(canciones);      // lo que acaba de publicarse pasa a ser la versión oficial de este teléfono
+            conflictos = {};
+        }
         persistirLocal();
         actualizarEstadoArchivo();
     }
@@ -1042,8 +1111,10 @@
     }
 
     // Genera el HTML completo con las canciones actuales dentro del bloque de datos
-    function construirHtml() {
-        const datos = { version: Date.now(), canciones: sinVista(canciones), sets: setsOficiales };
+    // publico = true (publicar en GitHub): sin las notas personales. Respaldo personal: con tus notas y marcado como privado.
+    function construirHtml(publico) {
+        const datos = { version: Date.now(), canciones: publico ? sinNotas(canciones) : sinVista(canciones), sets: setsOficiales };
+        if (!publico) datos.privado = true;
         const json = JSON.stringify(datos, null, 1)
             .replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
         const re = /(<script id="datos-canciones"[^>]*>)[\s\S]*?(<\/script>)/;
@@ -1146,7 +1217,6 @@
 
     // ---------- Texto con estilos: negrita **texto** y resaltado {{1:texto}} (colores 1 a 6) ----------
     // Convierte una línea con marcas en caracteres visibles con su estilo, y recuerda dónde empezó cada uno
-    const RE_HL = /\{\{([1-6]):/y;
     function parsearLinea(l) {
         const chars = [], pos = [];
         const total = (l.match(/\*\*/g) || []).length;
@@ -1350,7 +1420,14 @@
                     <summary>📝 Notas</summary>
                     <div class="note-tools">
                         <button class="btn-b" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" aria-label="Negrita">B</button>
-                        <small>Selecciona texto y pulsa B</small>
+                        <button class="nsw hl1" onmousedown="event.preventDefault()" onclick="resaltarNota(1)" aria-label="Resaltar en amarillo"></button>
+                        <button class="nsw hl2" onmousedown="event.preventDefault()" onclick="resaltarNota(2)" aria-label="Resaltar en verde"></button>
+                        <button class="nsw hl3" onmousedown="event.preventDefault()" onclick="resaltarNota(3)" aria-label="Resaltar en azul"></button>
+                        <button class="nsw hl4" onmousedown="event.preventDefault()" onclick="resaltarNota(4)" aria-label="Resaltar en rosa"></button>
+                        <button class="nsw hl5" onmousedown="event.preventDefault()" onclick="resaltarNota(5)" aria-label="Resaltar en naranja"></button>
+                        <button class="nsw hl6" onmousedown="event.preventDefault()" onclick="resaltarNota(6)" aria-label="Resaltar en morado"></button>
+                        <button class="nq" onmousedown="event.preventDefault()" onclick="resaltarNota(0)" aria-label="Quitar resaltado">✖ Quitar</button>
+                        <small>Selecciona texto y elige B o un color. Solo tú ves tus notas.</small>
                     </div>
                     <div class="note-ed" contenteditable="true" data-ph="Escribe una nota…" onpaste="pegarPlano(event)" oninput="notaInput(${s.id}, this)">${s.comentario || ''}</div>
                 </details>
@@ -1391,6 +1468,39 @@
         if (!s) return;
         s.comentario = (div.innerHTML === '<br>') ? '' : div.innerHTML;
         guardar();
+    }
+    // Resalta con color (1 a 6) el texto seleccionado dentro de la nota; color 0 quita el resaltado
+    function resaltarNota(color) {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) { aviso('Selecciona primero el texto de la nota'); return; }
+        const rango = sel.getRangeAt(0);
+        const nodo = rango.commonAncestorContainer;
+        const ed = (nodo.nodeType === 1 ? nodo : nodo.parentElement).closest('.note-ed');
+        if (!ed) { aviso('Selecciona primero el texto de la nota'); return; }
+        if (rango.collapsed) { aviso('Selecciona primero el texto que quieres ' + (color ? 'resaltar' : 'quitar')); return; }
+        // si la selección toca un trozo ya resaltado, se toma ese trozo completo (así cambiar o quitar el color funciona sin dejar restos)
+        const marca = n => (n.nodeType === 1 ? n : n.parentElement).closest('mark');
+        const m1 = marca(rango.startContainer), m2 = marca(rango.endContainer);
+        if (m1) rango.setStartBefore(m1);
+        if (m2) rango.setEndAfter(m2);
+        sel.removeAllRanges(); sel.addRange(rango);
+        const idNota = Number((ed.getAttribute('oninput') || '').match(/notaInput\((\d+)/)?.[1]);
+        const guardarNota = () => { if (idNota) notaInput(idNota, ed); };
+        if (!color) {                                              // quitar: se deshacen los resaltados que toca la selección
+            const tocadas = Array.from(ed.querySelectorAll('mark')).filter(m => rango.intersectsNode(m));
+            if (!tocadas.length) { aviso('No hay resaltado en ese texto'); return; }
+            tocadas.forEach(m => m.replaceWith(...m.childNodes));
+            ed.normalize(); guardarNota(); return;
+        }
+        if (m1 && m1 === m2) { m1.className = 'hl hl' + color; guardarNota(); return; }   // cambiar el color de un trozo ya resaltado
+        const caja = document.createElement('div');
+        caja.appendChild(rango.cloneContents());
+        caja.querySelectorAll('mark').forEach(m => m.replaceWith(...m.childNodes));   // se quita lo que ya estuviera resaltado
+        const html = caja.innerHTML;
+        document.execCommand('insertHTML', false, color ? '<mark class="hl hl' + color + '">' + html + '</mark>' : html);
+        // si quedó dentro de otro resaltado, se deshace el anidado
+        ed.querySelectorAll('mark mark').forEach(m => m.replaceWith(...m.childNodes));
+        guardarNota();
     }
     function pegarPlano(e) {
         e.preventDefault();
@@ -1469,7 +1579,7 @@
     // ---------- Importar canciones desde otro archivo del cancionero ----------
     // Deja solo formato básico en los comentarios (negrita, saltos de línea); lo demás se convierte en texto.
     function limpiarComentario(html) {
-        const permitido = new Set(['B', 'STRONG', 'I', 'EM', 'BR', 'DIV', 'SPAN', 'P']);
+        const permitido = new Set(['B', 'STRONG', 'I', 'EM', 'BR', 'DIV', 'SPAN', 'P', 'MARK']);
         const plantilla = document.createElement('template');
         plantilla.innerHTML = String(html || '');
         const limpiar = nodo => {
@@ -1480,6 +1590,7 @@
                     if (h.tagName === 'SCRIPT' || h.tagName === 'STYLE') return;
                     if (permitido.has(h.tagName)) {
                         const e = document.createElement(h.tagName.toLowerCase());
+                        if (h.tagName === 'MARK') { const n = (String(h.className).match(/hl([1-6])/) || [])[1]; e.className = n ? 'hl hl' + n : ''; }
                         e.appendChild(limpiar(h));
                         frag.appendChild(e);
                     } else frag.appendChild(limpiar(h));
@@ -1498,10 +1609,10 @@
         if (!f) return;
         let txt;
         try { txt = await f.text(); } catch (e) { aviso('No se pudo leer el archivo'); return; }
-        let lista = null;
+        let lista = null, esPrivado = false;
         const m = txt.match(/<script id="datos-canciones"[^>]*>([\s\S]*?)<\/script>/);
         try {
-            if (m) lista = JSON.parse(m[1]).canciones;
+            if (m) { const dj = JSON.parse(m[1]); lista = dj.canciones; esPrivado = !!dj.privado; }
             else { const j = JSON.parse(txt); lista = Array.isArray(j) ? j : j.canciones; }
         } catch (e) {}
         if (!Array.isArray(lista) || !lista.length) { aviso('Ese archivo no tiene canciones del cancionero', 4500); return; }
@@ -1513,7 +1624,7 @@
                 id: c.id,
                 titulo: c.titulo.trim().slice(0, 200),
                 tono: typeof c.tono === 'string' ? c.tono.trim().toUpperCase().slice(0, 10) : '',
-                comentario: typeof c.comentario === 'string' ? limpiarComentario(c.comentario.slice(0, 50000)) : '',
+                comentario: (esPrivado && typeof c.comentario === 'string') ? limpiarComentario(c.comentario.slice(0, 50000)) : '',
                 notas: typeof c.notas === 'string' ? c.notas.slice(0, 200000) : ''
             });
         });
@@ -1523,14 +1634,14 @@
         validas.forEach(c => {
             const ya = songPorId(c.id);
             if (!ya) nuevas.push(c);
-            else if (ya.titulo !== c.titulo || ya.tono !== c.tono || ya.notas !== c.notas || ya.comentario !== c.comentario) cambiadas.push(c);
+            else if (ya.titulo !== c.titulo || ya.tono !== c.tono || ya.notas !== c.notas) cambiadas.push(c);   // las notas personales no cuentan
         });
         if (!nuevas.length && !cambiadas.length) { aviso('Ya tienes todas esas canciones tal cual', 4500); return; }
 
         if (!confirm('El archivo trae ' + validas.length + ' canciones: ' + nuevas.length + ' nuevas y ' + cambiadas.length + ' con cambios respecto a las que tienes.\n\nAceptar: agregar las nuevas y reemplazar las que cambiaron.\nCancelar: no importar nada.')) return;
 
         nuevas.forEach(c => canciones.push(c));
-        cambiadas.forEach(c => { const i = canciones.findIndex(x => x.id === c.id); canciones[i] = Object.assign({}, canciones[i], c); });
+        cambiadas.forEach(c => { const i = canciones.findIndex(x => x.id === c.id); const mias = canciones[i].comentario; canciones[i] = Object.assign({}, canciones[i], c, { comentario: mias }); });   // se conservan tus notas
         guardar();
         if (esVistaSet()) renderSet(); else renderLib();
         aviso('Importadas: ' + nuevas.length + ' nuevas y ' + cambiadas.length + ' actualizadas', 5000);
@@ -2092,9 +2203,9 @@
         if (!adminActivo || !tokenGH) { aviso('Entra como administrador para publicar'); return; }
         if (publicando) return;
         const cfg = cfgAdmin(); if (!cfg) return;
-        const r = construirHtml();
+        const r = construirHtml(true);
         if (!r) { aviso('No se pudo preparar el archivo', 4000); return; }
-        if (!sinPreguntar && !confirm('Se publicará para TODOS los usuarios lo que ves en este teléfono: canciones, notas y sets oficiales.\n\n¿Publicar ahora?')) return;
+        if (!sinPreguntar && !confirm('Se publicará para TODOS los usuarios lo que ves en este teléfono: canciones, letras y sets oficiales. Tus notas personales NO se publican.\n\n¿Publicar ahora?')) return;
         publicando = true;
         const btn = el('btnPublicar'); btn.disabled = true; btn.textContent = 'Publicando…';
         try {
@@ -2116,7 +2227,7 @@
             if (res.status === 404) { aviso('No encuentro el repositorio, la rama o el archivo, o el token no tiene acceso. Revisa la conexión en ⚙.', 8000); return; }
             if (!res.ok) { aviso('GitHub respondió con un error (' + res.status + '). Intenta de nuevo.', 6000); return; }
             try { localStorage.removeItem(CLAVE_ADMIN_SETS); } catch (e) {}
-            marcarGuardado(r.version);
+            marcarGuardado(r.version, true);
             renderPanelAdmin();
             aviso('✔ Publicado. Los usuarios lo verán en 1 o 2 minutos.', 8000);
         } catch (e) {
@@ -2146,7 +2257,8 @@
             if (!navigator.onLine) return;
             revisando = true; ultima = Date.now();
             try {
-                const r = await fetch(location.pathname, { method: 'HEAD', cache: 'no-store' });
+                const ctl = new AbortController(), corte = setTimeout(() => ctl.abort(), 10000);   // con red lenta no se queda esperando
+                let r; try { r = await fetch(location.pathname, { method: 'HEAD', cache: 'no-store', signal: ctl.signal }); } finally { clearTimeout(corte); }
                 const firma = r.ok ? (r.headers.get('etag') || r.headers.get('last-modified') || '') : '';
                 if (!firma) return;
                 let guardada = null;

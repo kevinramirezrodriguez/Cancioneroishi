@@ -1,7 +1,9 @@
 // Guarda una copia de la app para que abra sin internet.
-// Con internet siempre pide primero la versión más nueva (así llegan tus canciones nuevas);
-// sin internet usa la copia guardada.
-const CACHE = 'cancionero-v2';
+// Con buena conexión siempre pide primero la versión más nueva (así llegan tus canciones nuevas).
+// Si la red está lenta o "colgada" (pasa con algunos datos móviles), a los pocos segundos abre la copia guardada
+// y la versión nueva se sigue descargando en segundo plano para la próxima vez.
+const CACHE = 'cancionero-v3';
+const ESPERA_RED = 4000;   // milisegundos que se espera a la red antes de usar la copia guardada
 const ARCHIVOS = [
   './',
   'index.html',
@@ -13,7 +15,12 @@ const ARCHIVOS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting()));
+  // Se guardan los archivos de uno en uno: si alguno falla por mala red, los demás se guardan igual
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => Promise.all(ARCHIVOS.map(a => c.add(a).catch(() => {}))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {
@@ -30,17 +37,23 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
+  const red = fetch(req, { cache: 'no-cache' }).then(res => {
+    if (res && res.ok) {
+      const copia = res.clone();
+      caches.open(CACHE).then(c => c.put(req, copia)).catch(() => {});
+    }
+    return res;
+  });
+  const guardada = () => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('index.html'));
+
   e.respondWith(
-    fetch(req, { cache: 'no-cache' })
-      .then(res => {
-        if (res && res.ok) {
-          const copia = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copia));
-        }
-        return res;
-      })
-      .catch(() =>
-        caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('index.html'))
-      )
+    new Promise(resolver => {
+      let listo = false;
+      const usar = r => { if (!listo && r) { listo = true; resolver(r); } };
+      const t = setTimeout(() => { guardada().then(usar); }, ESPERA_RED);   // red lenta: se usa la copia guardada
+      red.then(r => { clearTimeout(t); usar(r); })
+         .catch(() => { clearTimeout(t); guardada().then(r => { if (r) usar(r); else if (!listo) { listo = true; resolver(Response.error()); } }); });
+    })
   );
+  e.waitUntil(red.catch(() => {}));   // la descarga sigue en segundo plano aunque se haya usado la copia
 });
