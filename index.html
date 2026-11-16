@@ -409,7 +409,7 @@
                 <input type="text" id="edTono" oninput="editorCambio()" placeholder="RE" style="text-align:center;text-transform:uppercase;font-weight:800">
             </div>
         </div>
-        <div class="ed-media">
+        <div class="ed-media" id="edMedia" style="display:none">
             <div>
                 <label for="edYoutube">Video de YouTube (opcional)</label>
                 <input type="url" id="edYoutube" oninput="editorCambio()" placeholder="Pega aquí el enlace de YouTube" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url">
@@ -1726,8 +1726,8 @@
                 notas: typeof c.notas === 'string' ? c.notas.slice(0, 200000) : ''
             });
             const nv = validas[validas.length - 1];
-            if (typeof c.youtube === 'string' && idYoutube(c.youtube)) nv.youtube = c.youtube.trim().slice(0, 200);
-            if (typeof c.audio === 'string' && nombreAudio(c.audio)) nv.audio = nombreAudio(c.audio).slice(0, 200);
+            if (adminActivo && typeof c.youtube === 'string' && idYoutube(c.youtube)) nv.youtube = c.youtube.trim().slice(0, 200);
+            if (adminActivo && typeof c.audio === 'string' && nombreAudio(c.audio)) nv.audio = nombreAudio(c.audio).slice(0, 200);
         });
         if (!validas.length) { aviso('No se encontraron canciones válidas', 4500); return; }
 
@@ -1735,7 +1735,7 @@
         validas.forEach(c => {
             const ya = songPorId(c.id);
             if (!ya) nuevas.push(c);
-            else if (ya.titulo !== c.titulo || ya.tono !== c.tono || ya.notas !== c.notas || (ya.youtube || '') !== (c.youtube || '') || (ya.audio || '') !== (c.audio || '')) cambiadas.push(c);   // las notas personales no cuentan
+            else if (ya.titulo !== c.titulo || ya.tono !== c.tono || ya.notas !== c.notas || (adminActivo && ((ya.youtube || '') !== (c.youtube || '') || (ya.audio || '') !== (c.audio || '')))) cambiadas.push(c);   // las notas personales no cuentan
         });
         if (!nuevas.length && !cambiadas.length) { aviso('Ya tienes todas esas canciones tal cual', 4500); return; }
 
@@ -2023,6 +2023,7 @@
         editor.redo = [];
         ponerEstado(editor.base);
         el('edHead').textContent = s ? 'Editar canción' : 'Nueva canción';
+        el('edMedia').style.display = adminActivo ? '' : 'none';   // enlaces de YouTube y audio: solo el administrador
         el('btnEliminar').style.display = s ? 'block' : 'none';
         el('btnOficial').style.display = (s && conflictos[s.id]) ? 'block' : 'none';
         el('btnRedo').disabled = true;
@@ -2182,12 +2183,17 @@
         if (!titulo) { aviso('Escribe el nombre de la canción'); el('edTitulo').focus(); return; }
         const tono = e.tono.trim().toUpperCase();
         const notas = normalizarTexto(e.notas);
-        const youtube = e.youtube.trim();
-        if (youtube && !idYoutube(youtube)) { aviso('El enlace de YouTube no parece válido. Pega el enlace completo del video.', 4500); el('edYoutube').focus(); return; }
-        let audio = e.audio.trim();
-        if (audio) {
-            audio = nombreAudio(audio);
-            if (!audio) { aviso('El nombre del audio no es válido. Ejemplo: Una palabra.mp3 (mp3, m4a, mp4, ogg o wav).', 5000); el('edAudio').focus(); return; }
+        let youtube = e.youtube.trim(), audio = e.audio.trim();
+        if (!adminActivo) {
+            // Solo el administrador agrega o cambia los enlaces de YouTube y los audios: aquí se conserva lo que ya tenía la canción
+            const previa = editor.id == null ? null : songPorId(editor.id);
+            youtube = (previa && previa.youtube) || ''; audio = (previa && previa.audio) || '';
+        } else {
+            if (youtube && !idYoutube(youtube)) { aviso('El enlace de YouTube no parece válido. Pega el enlace completo del video.', 4500); el('edYoutube').focus(); return; }
+            if (audio) {
+                audio = nombreAudio(audio);
+                if (!audio) { aviso('El nombre del audio no es válido. Ejemplo: Una palabra.mp3 (mp3, m4a, mp4, ogg o wav).', 5000); el('edAudio').focus(); return; }
+            }
         }
 
         if (editor.id == null) {
