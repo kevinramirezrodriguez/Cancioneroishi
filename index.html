@@ -229,6 +229,32 @@
         .btn-html .dot { display: none; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); border: 2px solid var(--bg); }
         #btnHtml:not(.btn-tema) { background: transparent; border-color: var(--line); color: var(--mut); font-weight: 600; font-size: 12px; padding: 0 10px; }
         .estado { margin: -4px 4px 12px; font-weight: 700; }
+        /* ---------- Multimedia: botón YouTube, reproductor mp3, cuadro flotante ---------- */
+        .yt-sq { flex: none; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel2); color: var(--acc-ink); font-size: 18px; display: grid; place-items: center; padding: 0; }
+        .yt-sq:active { background: var(--tile-on); }
+        .mp3 { --p: 0%; display: flex; align-items: center; gap: 12px; background: var(--panel2); border: 1px solid var(--line); border-radius: 16px; padding: 8px 14px 6px 10px; margin: 4px 0 12px; }
+        .mp3 .pp { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--acc); color: var(--acc-tx); font-size: 17px; display: grid; place-items: center; padding: 0; }
+        .mp3 .mid { flex: 1; min-width: 0; }
+        .mp3 .wv { position: relative; height: 34px; touch-action: pan-y; cursor: pointer; }
+        .mp3 .b0, .mp3 .b1 { position: absolute; inset: 0; display: flex; align-items: center; gap: 2px; }
+        .mp3 .b0 i, .mp3 .b1 i { flex: 1; min-width: 1px; border-radius: 2px; background: var(--line); }
+        .mp3 .b1 { clip-path: inset(0 calc(100% - var(--p)) 0 0); }
+        .mp3 .b1 i { background: var(--acc-ink); }
+        .mp3 .dot { position: absolute; top: 50%; left: var(--p); width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--acc-ink); box-shadow: 0 0 0 3px var(--panel2); pointer-events: none; }
+        .mp3 .tm { display: flex; justify-content: space-between; font-size: 11px; color: var(--mut); margin-top: 2px; font-variant-numeric: tabular-nums; }
+        .mp3.carga .pp { opacity: .6; }
+        .ed-media { display: grid; gap: 10px; margin-bottom: 12px; }
+        .ed-media small { display: block; color: var(--mut); font-size: 11px; margin-top: 4px; }
+        .mini-yt { position: fixed; right: 12px; bottom: calc(110px + env(safe-area-inset-bottom)); z-index: 350; width: min(270px, 72vw); background: #000; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.5); display: none; }
+        .mini-yt.open { display: block; }
+        .mini-yt.grande { width: min(92vw, 460px); }
+        .mini-bar { display: flex; align-items: center; gap: 4px; background: var(--panel); color: var(--tx); padding: 2px 4px 2px 10px; touch-action: none; cursor: grab; }
+        .mini-bar .mini-t { flex: 1; min-width: 0; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mini-bar button { flex: none; width: 34px; height: 34px; border: 0; background: transparent; color: var(--tx); font-size: 15px; padding: 0; }
+        .mini-vid { aspect-ratio: 16 / 9; width: 100%; background: #000; }
+        .mini-vid iframe { width: 100%; height: 100%; border: 0; display: block; }
+        .mini-yt.min .mini-vid { height: 0; aspect-ratio: auto; overflow: hidden; }
+
         .estado.ok { color: var(--ok); }
         .estado.pend { color: var(--acc-ink); }
 
@@ -353,6 +379,18 @@
     <button class="next" id="btnNext" onclick="mover(1)">Siguiente ›</button>
 </div>
 
+<!-- VIDEO DE YOUTUBE EN CUADRO FLOTANTE -->
+<div class="mini-yt" id="miniYt" role="dialog" aria-label="Video de YouTube">
+    <div class="mini-bar" id="miniBar">
+        <span class="mini-t" id="miniTitulo"></span>
+        <button onclick="agrandarYt()" aria-label="Más grande o más chico">⤢</button>
+        <button onclick="minimizarYt()" aria-label="Minimizar">▁</button>
+        <button onclick="abrirFueraYt()" aria-label="Abrir en YouTube">↗</button>
+        <button onclick="cerrarYt()" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="mini-vid" id="miniVid"></div>
+</div>
+
 <!-- EDITOR A PANTALLA COMPLETA -->
 <div class="editor" id="editor">
     <div class="ed-bar">
@@ -369,6 +407,17 @@
             <div>
                 <label for="edTono">Tono</label>
                 <input type="text" id="edTono" oninput="editorCambio()" placeholder="RE" style="text-align:center;text-transform:uppercase;font-weight:800">
+            </div>
+        </div>
+        <div class="ed-media">
+            <div>
+                <label for="edYoutube">Video de YouTube (opcional)</label>
+                <input type="url" id="edYoutube" oninput="editorCambio()" placeholder="Pega aquí el enlace de YouTube" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url">
+            </div>
+            <div>
+                <label for="edAudio">Audio de esta canción (opcional)</label>
+                <input type="text" id="edAudio" oninput="editorCambio()" placeholder="Nombre del archivo, ej. Una palabra.mp3" autocapitalize="off" autocorrect="off" spellcheck="false">
+                <small>El archivo debe estar en la carpeta audio de GitHub. Escribe el nombre exacto, con su extensión.</small>
             </div>
         </div>
         <div class="ed-tools">
@@ -509,9 +558,8 @@
 <div class="toast" id="toast"></div>
 
 <!-- DATOS: las canciones viven aquí, dentro del archivo. El botón "⬇ HTML" de la app reescribe este bloque con tus canciones actuales. -->
-<script id="datos-canciones" type="application/json">
-{
- "version": 1794798246555,
+<script id="datos-canciones" type="application/json">{
+ "version": 1794861455331,
  "canciones": [
   {
    "id": 1,
@@ -623,7 +671,8 @@
    "titulo": "Una palabra - Matt Gilman",
    "tono": "REM",
    "comentario": "",
-   "notas": "[Intro - Teclado]\n// Dm - Gm - F - Am //\n\n[Estrofa 1]\n           Dm             Gm\n////Una palabra viene a mi \n       F                Am \nUna palabra para describir ////\n\n[Estrofa 2]\n         Dm  Gm      F             Am\n////Santoooo, santooooo Dios poderoso ////\n\n     Dm Gm              F      Am\n////Ohhh, ohhh, ohhhh, ohhhh  ohhhh////\n\n[Coro]\n\n    Dm            Gm\n////Nadie es como tú, Dios \n            F      Am\nTú eres santo, santo ////\n \n[Estrofa 2]\n         Dm  Gm      F             Am\n////Santoooo, santooooo Dios poderoso ////"
+   "notas": "[Intro - Teclado]\n// Dm - Gm - F - Am //\n\n[Estrofa 1]\n           Dm             Gm\n////Una palabra viene a mi \n       F                Am \nUna palabra para describir ////\n\n[Estrofa 2]\n         Dm  Gm      F             Am\n////Santoooo, santooooo Dios poderoso ////\n\n     Dm Gm              F      Am\n////Ohhh, ohhh, ohhhh, ohhhh  ohhhh////\n\n[Coro]\n\n    Dm            Gm\n////Nadie es como tú, Dios \n            F      Am\nTú eres santo, santo ////\n \n[Estrofa 2]\n         Dm  Gm      F             Am\n////Santoooo, santooooo Dios poderoso ////",
+   "audio": "Una palabra.mp4"
   },
   {
    "id": 1794197475320,
@@ -659,8 +708,7 @@
    ]
   }
  ]
-}
-</script>
+}</script>
 
 <script>
     // Copia del documento tal como llegó, antes de que la app lo modifique.
@@ -704,7 +752,7 @@
     let setsOficiales = [];           // sets oficiales (los arma el administrador): [{ id, nombre, fecha, canciones: [ids] }]
 
     // ---------- Fusión: una versión nueva del archivo no pisa lo que cada persona personalizó ----------
-    const CAMPOS = ['titulo', 'tono', 'notas'];   // las notas personales (comentario) nunca se mezclan ni se pisan
+    const CAMPOS = ['titulo', 'tono', 'youtube', 'audio', 'notas'];   // las notas personales (comentario) nunca se mezclan ni se pisan
     const valorCampo = (c, k) => (c && typeof c[k] === 'string') ? c[k] : '';
     function snapDe(lista) { const m = {}; sinVista(lista).forEach(c => { m[c.id] = c; }); return m; }
 
@@ -1395,6 +1443,7 @@
 
     // ---------- Biblioteca ----------
     function renderLib() {
+        if (audioId !== null) detenerAudio();
         const q = el('search').value.toLowerCase().trim();
         const lista = canciones.filter(s => s.titulo.toLowerCase().includes(q))
             .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es', { sensitivity: 'base', numeric: true }));
@@ -1456,12 +1505,14 @@
                         ${p.sub ? `<small>${escapeHtml(p.sub)}</small>` : ''}
                         ${s.tono ? `<span class="badge">TONO ${escapeHtml(tonoTranspuesto(s.tono, t))}${t ? ` <span style="font-weight:700;opacity:.75;letter-spacing:0">(${t > 0 ? '+' : ''}${t} · orig. ${escapeHtml(s.tono)})</span>` : ''}</span>` : ''}
                     </div>
+                    ${idYoutube(s.youtube) ? `<button class="yt-sq" onclick="abrirYoutube(${s.id})" aria-label="Ver el video de YouTube" title="Ver el video de YouTube">▶</button>` : ''}
                 </div>
                 <div class="s-order">
                     <button onclick="moverEnSet(-1)" ${cur === 0 ? 'disabled' : ''}>⇦ Antes</button>
                     <button onclick="moverEnSet(1)" ${cur === setIds.length - 1 ? 'disabled' : ''}>Después ⇨</button>
                     <button class="rm" onclick="quitarActual()">Quitar</button>
                 </div>
+                ${htmlMp3(s)}
                 <details class="notes" ${s.comentario ? 'open' : ''}>
                     <summary>📝 Notas</summary>
                     <div class="note-tools">
@@ -1480,6 +1531,7 @@
                 <pre class="lyrics">${renderLetra(s.notas, t)}</pre>
             </article>`;
 
+        if (audioId !== null && audioId !== s.id) detenerAudio(); else pintarAudio();
         el('pos').textContent = `${cur + 1}/${setIds.length}`;
         el('btnPrev').disabled = cur === 0;
         el('btnNext').disabled = cur === setIds.length - 1;
@@ -1673,6 +1725,9 @@
                 comentario: (esPrivado && typeof c.comentario === 'string') ? limpiarComentario(c.comentario.slice(0, 50000)) : '',
                 notas: typeof c.notas === 'string' ? c.notas.slice(0, 200000) : ''
             });
+            const nv = validas[validas.length - 1];
+            if (typeof c.youtube === 'string' && idYoutube(c.youtube)) nv.youtube = c.youtube.trim().slice(0, 200);
+            if (typeof c.audio === 'string' && nombreAudio(c.audio)) nv.audio = nombreAudio(c.audio).slice(0, 200);
         });
         if (!validas.length) { aviso('No se encontraron canciones válidas', 4500); return; }
 
@@ -1680,7 +1735,7 @@
         validas.forEach(c => {
             const ya = songPorId(c.id);
             if (!ya) nuevas.push(c);
-            else if (ya.titulo !== c.titulo || ya.tono !== c.tono || ya.notas !== c.notas) cambiadas.push(c);   // las notas personales no cuentan
+            else if (ya.titulo !== c.titulo || ya.tono !== c.tono || ya.notas !== c.notas || (ya.youtube || '') !== (c.youtube || '') || (ya.audio || '') !== (c.audio || '')) cambiadas.push(c);   // las notas personales no cuentan
         });
         if (!nuevas.length && !cambiadas.length) { aviso('Ya tienes todas esas canciones tal cual', 4500); return; }
 
@@ -1765,19 +1820,206 @@
         else if (e.key === 'ArrowLeft') moverEscenario(-1);
     });
 
+    // ---------- Multimedia: video de YouTube (cuadro flotante) y audio ----------
+    function idYoutube(u) {
+        u = String(u || '').trim();
+        if (!u) return null;
+        if (/^[A-Za-z0-9_-]{11}$/.test(u)) return u;
+        let url;
+        try { url = new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u); } catch (e) { return null; }
+        const h = url.hostname.replace(/^(www\.|m\.|music\.)/i, '').toLowerCase();
+        let id = null;
+        if (h === 'youtu.be') id = url.pathname.split('/')[1];
+        else if (h === 'youtube.com' || h === 'youtube-nocookie.com') {
+            const p = url.pathname.split('/').filter(Boolean);
+            if (p[0] === 'watch') id = url.searchParams.get('v');
+            else if (['embed', 'shorts', 'live', 'v'].indexOf(p[0]) >= 0) id = p[1];
+        }
+        return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+    }
+    const EXT_AUDIO = /\.(mp3|m4a|mp4|aac|ogg|oga|opus|wav|webm)$/i;
+    // Nombre limpio del archivo dentro de la carpeta audio/ (o null si no es válido)
+    function nombreAudio(a) {
+        a = String(a || '').trim().replace(/\\/g, '/').replace(/^\.?\/?audio\//i, '');
+        if (!a || a.indexOf('..') >= 0 || /[<>"'`?#]/.test(a) || !EXT_AUDIO.test(a)) return null;
+        return a;
+    }
+    function srcAudio(a) { return 'audio/' + a.split('/').map(encodeURIComponent).join('/'); }
+
+    // -- Cuadro flotante de YouTube --
+    let ytId = null;
+    function abrirYoutube(id) {
+        const s = songPorId(id), v = s && idYoutube(s.youtube);
+        if (!v) { aviso('Esta canción no tiene un enlace de YouTube válido'); return; }
+        if (navigator.onLine === false) { aviso('El video necesita internet', 3500); return; }
+        detenerAudio();
+        el('miniTitulo').textContent = partesTitulo(s.titulo).main;
+        const vid = el('miniVid'); vid.innerHTML = '';
+        const f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/' + v + '?autoplay=1&playsinline=1&rel=0&enablejsapi=1';
+        f.title = 'Video de YouTube';
+        f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        f.allowFullscreen = true;
+        f.referrerPolicy = 'strict-origin-when-cross-origin';
+        vid.appendChild(f);
+        el('miniYt').classList.add('open'); el('miniYt').classList.remove('min');
+        ytId = v;
+    }
+    function cerrarYt() { el('miniVid').innerHTML = ''; el('miniYt').classList.remove('open', 'min'); ytId = null; }
+    function minimizarYt() { el('miniYt').classList.toggle('min'); }
+    function agrandarYt() { el('miniYt').classList.remove('min'); el('miniYt').classList.toggle('grande'); }
+    function abrirFueraYt() { if (ytId) window.open('https://www.youtube.com/watch?v=' + ytId, '_blank', 'noopener'); }
+    function pausarYt() {
+        try { const f = el('miniVid').querySelector('iframe'); if (f && f.contentWindow) f.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*'); } catch (e) {}
+    }
+    // Se puede mover el cuadro arrastrando su barra
+    (function () {
+        const caja = el('miniYt'), barra = el('miniBar');
+        let dx = 0, dy = 0, activo = false;
+        barra.addEventListener('pointerdown', e => {
+            if (e.target.closest('button')) return;
+            const r = caja.getBoundingClientRect();
+            dx = e.clientX - r.left; dy = e.clientY - r.top; activo = true;
+            caja.style.right = 'auto'; caja.style.bottom = 'auto'; caja.style.left = r.left + 'px'; caja.style.top = r.top + 'px';
+            try { barra.setPointerCapture(e.pointerId); } catch (x) {}
+        });
+        barra.addEventListener('pointermove', e => {
+            if (!activo) return;
+            const x = Math.min(Math.max(0, e.clientX - dx), Math.max(0, innerWidth - caja.offsetWidth));
+            const y = Math.min(Math.max(0, e.clientY - dy), Math.max(0, innerHeight - caja.offsetHeight));
+            caja.style.left = x + 'px'; caja.style.top = y + 'px';
+        });
+        const fin = () => { activo = false; };
+        barra.addEventListener('pointerup', fin); barra.addEventListener('pointercancel', fin);
+    })();
+
+    // -- Reproductor de audio (estilo nota de voz) --
+    const audio = new Audio();
+    audio.preload = 'none';
+    const CACHE_AUDIO = 'cancionero-audio-v1';
+    let audioId = null, audioBlobUrl = '', seekPend = null, cargandoAudio = false;
+
+    function fmtT(t) { if (!isFinite(t) || t < 0) t = 0; return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0'); }
+    // Onda decorativa: las alturas dependen del nombre del archivo, así siempre se ve igual para la misma canción
+    function barrasOnda(clave) {
+        let h = 2166136261;
+        for (let i = 0; i < clave.length; i++) { h ^= clave.charCodeAt(i); h = Math.imul(h, 16777619); }
+        let out = '';
+        for (let i = 0; i < 46; i++) {
+            h ^= h << 13; h ^= h >>> 17; h ^= h << 5;
+            const r = ((h >>> 0) % 1000) / 1000;
+            const alt = 18 + Math.abs(Math.sin(i / 2.7 + (clave.length % 5))) * 52 + r * 30;
+            out += '<i style="height:' + Math.min(100, Math.round(alt)) + '%"></i>';
+        }
+        return out;
+    }
+    function htmlMp3(s) {
+        const a = nombreAudio(s.audio);
+        if (!a) return '';
+        const b = barrasOnda(a);
+        return `<div class="mp3" id="mp3Box" data-id="${s.id}">
+                    <button class="pp" id="mp3Pp" onclick="alternarAudio(${s.id})" aria-label="Reproducir o pausar">▶</button>
+                    <div class="mid">
+                        <div class="wv" onpointerdown="mp3Tocar(event, ${s.id})"><div class="b0">${b}</div><div class="b1">${b}</div><span class="dot"></span></div>
+                        <div class="tm"><span id="mp3T">0:00</span><span id="mp3D"></span></div>
+                    </div>
+                </div>`;
+    }
+    function pintarAudio() {
+        const box = document.getElementById('mp3Box');
+        if (!box) return;
+        const activo = audioId !== null && String(audioId) === box.dataset.id;
+        const dur = activo && isFinite(audio.duration) ? audio.duration : 0;
+        const p = activo && dur ? Math.min(1, audio.currentTime / dur) : 0;
+        box.style.setProperty('--p', (p * 100) + '%');
+        box.classList.toggle('carga', activo && cargandoAudio);
+        el('mp3Pp').textContent = activo && cargandoAudio ? '…' : (activo && !audio.paused ? '⏸' : '▶');
+        el('mp3T').textContent = activo && cargandoAudio ? 'Cargando…' : fmtT(activo ? audio.currentTime : 0);
+        el('mp3D').textContent = dur ? fmtT(dur) : '';
+    }
+    function detenerAudio() {
+        try { audio.pause(); audio.removeAttribute('src'); audio.load(); } catch (e) {}
+        if (audioBlobUrl) { try { URL.revokeObjectURL(audioBlobUrl); } catch (e) {} audioBlobUrl = ''; }
+        audioId = null; seekPend = null; cargandoAudio = false;
+        pintarAudio();
+    }
+    function errorAudio() {
+        if (audioId === null) return;
+        cargandoAudio = false;
+        aviso('No se pudo reproducir este audio', 4000);
+        detenerAudio();
+    }
+    async function alternarAudio(id) {
+        const s = songPorId(id), a = s && nombreAudio(s.audio);
+        if (!a) { aviso('Esta canción no tiene audio'); return; }
+        if (cargandoAudio) return;
+        if (audioId === id && audio.src) {
+            if (audio.paused) { pausarYt(); audio.play().catch(errorAudio); } else audio.pause();
+            return;
+        }
+        detenerAudio();
+        audioId = id; pausarYt();
+        const src = srcAudio(a);
+        let resp = null, cache = null;
+        try { if (window.caches) cache = await caches.open(CACHE_AUDIO); } catch (e) {}
+        try { if (cache) resp = await cache.match(src); } catch (e) {}
+        if (!resp) {
+            if (navigator.onLine === false) { audioId = null; pintarAudio(); aviso('Este audio todavía no está guardado en tu teléfono. La primera vez necesita internet.', 5000); return; }
+            cargandoAudio = true; pintarAudio();
+            try {
+                resp = await fetch(src);
+                if (!resp.ok) throw new Error('http ' + resp.status);
+                if (cache) { try { await cache.put(src, resp.clone()); } catch (e) {} }
+            } catch (e) {
+                cargandoAudio = false; audioId = null; pintarAudio();
+                aviso('No se pudo cargar el audio. Revisa tu internet y que el archivo esté en la carpeta audio de GitHub.', 5500);
+                return;
+            }
+        }
+        let blob;
+        try { blob = await resp.blob(); } catch (e) { cargandoAudio = false; audioId = null; pintarAudio(); aviso('No se pudo cargar el audio', 4000); return; }
+        if (audioId !== id) return;   // cambiaste de canción mientras cargaba
+        cargandoAudio = false;
+        audioBlobUrl = URL.createObjectURL(blob);
+        audio.src = audioBlobUrl;
+        pintarAudio();
+        audio.play().catch(errorAudio);
+    }
+    function buscarAudio(id, p) {
+        if (audioId !== id) { seekPend = p; alternarAudio(id); return; }
+        if (isFinite(audio.duration) && audio.duration > 0) { audio.currentTime = p * audio.duration; pintarAudio(); } else seekPend = p;
+    }
+    function mp3Tocar(e, id) {
+        const wv = e.currentTarget;
+        const ir = ev => { const r = wv.getBoundingClientRect(); buscarAudio(id, Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width))); };
+        ir(e);
+        const fin = () => { document.removeEventListener('pointermove', ir); document.removeEventListener('pointerup', fin); document.removeEventListener('pointercancel', fin); };
+        document.addEventListener('pointermove', ir); document.addEventListener('pointerup', fin); document.addEventListener('pointercancel', fin);
+    }
+    audio.addEventListener('timeupdate', pintarAudio);
+    audio.addEventListener('play', pintarAudio);
+    audio.addEventListener('pause', pintarAudio);
+    audio.addEventListener('loadedmetadata', () => {
+        if (seekPend !== null && isFinite(audio.duration)) { audio.currentTime = seekPend * audio.duration; seekPend = null; }
+        pintarAudio();
+    });
+    audio.addEventListener('ended', () => { audio.currentTime = 0; pintarAudio(); });
+    audio.addEventListener('error', errorAudio);
+
     // ---------- Editor ----------
     function estadoEditor() {
-        return { titulo: el('edTitulo').value, tono: el('edTono').value, notas: el('edTexto').value };
+        return { titulo: el('edTitulo').value, tono: el('edTono').value, notas: el('edTexto').value, youtube: el('edYoutube').value, audio: el('edAudio').value };
     }
     function ponerEstado(e) {
         el('edTitulo').value = e.titulo; el('edTono').value = e.tono; el('edTexto').value = e.notas;
+        el('edYoutube').value = e.youtube || ''; el('edAudio').value = e.audio || '';
     }
-    function igual(a, b) { return a.titulo === b.titulo && a.tono === b.tono && a.notas === b.notas; }
+    function igual(a, b) { return a.titulo === b.titulo && a.tono === b.tono && a.notas === b.notas && (a.youtube || '') === (b.youtube || '') && (a.audio || '') === (b.audio || ''); }
 
     function abrirEditor(id) {
         const s = id == null ? null : songPorId(id);
         editor.id = s ? s.id : null;
-        editor.base = s ? { titulo: s.titulo, tono: s.tono || '', notas: s.notas || '' } : { titulo: '', tono: '', notas: '' };
+        editor.base = s ? { titulo: s.titulo, tono: s.tono || '', notas: s.notas || '', youtube: s.youtube || '', audio: s.audio || '' } : { titulo: '', tono: '', notas: '', youtube: '', audio: '' };
         editor.redo = [];
         ponerEstado(editor.base);
         el('edHead').textContent = s ? 'Editar canción' : 'Nueva canción';
@@ -1940,11 +2182,21 @@
         if (!titulo) { aviso('Escribe el nombre de la canción'); el('edTitulo').focus(); return; }
         const tono = e.tono.trim().toUpperCase();
         const notas = normalizarTexto(e.notas);
+        const youtube = e.youtube.trim();
+        if (youtube && !idYoutube(youtube)) { aviso('El enlace de YouTube no parece válido. Pega el enlace completo del video.', 4500); el('edYoutube').focus(); return; }
+        let audio = e.audio.trim();
+        if (audio) {
+            audio = nombreAudio(audio);
+            if (!audio) { aviso('El nombre del audio no es válido. Ejemplo: Una palabra.mp3 (mp3, m4a, mp4, ogg o wav).', 5000); el('edAudio').focus(); return; }
+        }
 
         if (editor.id == null) {
             // Una canción nueva se suma a Mi set y se abre ahí, con acordes en color y botones T+ / T−
             const id = Date.now();
-            canciones.push({ id, titulo, tono, comentario: '', notas });
+            const nueva = { id, titulo, tono, comentario: '', notas };
+            if (youtube) nueva.youtube = youtube;
+            if (audio) nueva.audio = audio;
+            canciones.push(nueva);
             misIds.push(id);
             if (modoSet === 'sem') curGuardado.mio = misIds.length - 1; else cur = misIds.length - 1;
             guardar();
@@ -1957,6 +2209,9 @@
 
         const s = songPorId(editor.id);
         s.titulo = titulo; s.tono = tono; s.notas = notas;
+        if (youtube) s.youtube = youtube; else delete s.youtube;
+        if (audio) s.audio = audio; else delete s.audio;
+        if (audioId === s.id) detenerAudio();
         aviso('✔ Guardado');
         guardar();
         cerrarEditor();
@@ -1968,7 +2223,7 @@
         const s = songPorId(editor.id);
         const c = s && conflictos[s.id];
         if (!c) return;
-        const nombres = { titulo: 'el título', tono: 'el tono', comentario: 'tus notas', notas: 'la letra y los acordes (se pierden tus comentarios y resaltados dentro de la letra)' };
+        const nombres = { titulo: 'el título', tono: 'el tono', youtube: 'el enlace de YouTube', audio: 'el audio', comentario: 'tus notas', notas: 'la letra y los acordes (se pierden tus comentarios y resaltados dentro de la letra)' };
         const que = c.campos.map(k => nombres[k] || k).join(', ');
         if (!confirm('Se reemplazará con la versión oficial: ' + que + '.\n\nLo demás de esta canción se queda como lo tienes. ¿Continuar?')) return;
         c.campos.forEach(k => { s[k] = valorCampo(c.oficial, k); });

@@ -2,7 +2,7 @@
 // Con buena conexión siempre pide primero la versión más nueva (así llegan tus canciones nuevas).
 // Si la red está lenta o "colgada" (pasa con algunos datos móviles), a los pocos segundos abre la copia guardada
 // y la versión nueva se sigue descargando en segundo plano para la próxima vez.
-const CACHE = 'cancionero-v3';
+const CACHE = 'cancionero-v4';
 const ESPERA_RED = 4000;   // milisegundos que se espera a la red antes de usar la copia guardada
 const ARCHIVOS = [
   './',
@@ -26,7 +26,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(ks => Promise.all(ks.filter(k => k !== CACHE && k.indexOf('cancionero-audio') !== 0).map(k => caches.delete(k))))   // la copia de los audios se conserva
       .then(() => self.clients.claim())
   );
 });
@@ -36,6 +36,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.indexOf('/audio/') >= 0) return;   // los audios los guarda y reproduce la propia app
 
   const red = fetch(req, { cache: 'no-cache' }).then(res => {
     if (res && res.ok) {
